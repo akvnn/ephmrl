@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: timescale/timescaledb-ha:pg17
+    container_name: timescaledb
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - pg_data_ephmrl:/home/postgres/pgdata/data
+    restart: always
+    command: postgres -c  'timescaledb.telemetry_level=off'
+    logging:
+      driver: none
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ephmrl-net
+  ephmrl-web-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn src.server:app --host 0.0.0.0 --port ${API_PORT:-8000} --reload # remove reload for prod
+    container_name: ephmrl-web-api
+    ports:
+      - ${API_PORT:-8000}:${API_PORT:-8000}
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    volumes:
+      - ./src/:/opt/src # for development, remove this bind mount for production
+    networks:
+      - ephmrl-net
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh", "${API_PORT:-8000}"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+volumes:
+  pg_data_ephmrl:
+networks:
+  ephmrl-net:
+    driver: bridge
