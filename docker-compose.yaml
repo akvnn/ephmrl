@@ -1,4 +1,17 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ephmrl-frontend
+    ports:
+      - ${FRONTEND_PORT:-3000}:3000
+    env_file:
+      - .env
+    depends_on:
+      - ephmrl-web-api
+    networks:
+      - ephmrl-net
   postgres:
     image: timescale/timescaledb-ha:pg17
     container_name: timescaledb
