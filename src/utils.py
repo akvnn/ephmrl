@@ -1,59 +1,47 @@
-from typing import Optional
-
-import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import SecurityScopes, HTTPAuthorizationCredentials, HTTPBearer
-from src.configuration import config
-
-
-class UnauthorizedException(HTTPException):
-    def __init__(self, detail: str, **kwargs):
-        """Returns HTTP 403"""
-        super().__init__(status.HTTP_403_FORBIDDEN, detail=detail)
+from typing import Dict
+from fastapi import HTTPException, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.security import auth, UnauthorizedException, UnauthenticatedException
+from src.models.user import User
+from src.crud import user as crud_user
+from src.dependency import get_db
+import uuid
 
 
-class UnauthenticatedException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Requires authentication"
-        )
+async def get_current_user(
+    payload: Dict = Depends(auth.verify), db: AsyncSession = Depends(get_db)
+) -> User:
+    """
+    Validate JWT token (native RS256 or Auth0) and return user
+    """
 
-
-class VerifyToken:
-    def __init__(self):
-        self.config = config
-
-        # This gets the JWKS from a given URL and does processing so you can
-        # use any of the keys available
-        jwks_url = f"https://{self.config.AUTH0_DOMAIN}/.well-known/jwks.json"
-        self.jwks_client = jwt.PyJWKClient(jwks_url)
-
-    async def verify(
-        self,
-        security_scopes: SecurityScopes,
-        token: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer()),
-    ):
-        if token is None:
+    try:
+        # Get user ID from token
+        user_id_str: str = payload.get("sub")
+        if not user_id_str:
             raise UnauthenticatedException
-        # This gets the 'kid' from the passed token
-        try:
-            signing_key = self.jwks_client.get_signing_key_from_jwt(
-                token.credentials
-            ).key
-        except jwt.exceptions.PyJWKClientError as error:
-            raise UnauthorizedException(str(error))
-        except jwt.exceptions.DecodeError as error:
-            raise UnauthorizedException(str(error))
 
+        # For native ephmrl auth, sub is user UUID
+        # For Auth0, sub is auth0 user ID
         try:
-            payload = jwt.decode(
-                token.credentials,
-                signing_key,
-                algorithms=self.config.AUTH0_ALGORITHMS,
-                audience=self.config.AUTH0_API_AUDIENCE,
-                issuer=self.config.AUTH0_ISSUER,
+            user_id = uuid.UUID(user_id_str)
+            user = await crud_user.get_user_by_id(db, user_id)
+        except ValueError:
+            # Not a UUID, must be Auth0 ID
+            user = await crud_user.get_user_by_auth0_id(db, user_id_str)
+
+        if not user:
+            raise UnauthorizedException
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
             )
-        except Exception as error:
-            raise UnauthorizedException(str(error))
 
-        return payload
+        return user
+    except UnauthenticatedException:
+        raise
+    except UnauthorizedException:
+        raise
+    except Exception as e:
+        raise UnauthorizedException(str(e))

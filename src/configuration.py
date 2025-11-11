@@ -22,6 +22,17 @@ class Settings(BaseSettings):
     ENVIRONMENT: Environment = Environment.DEVELOPMENT
     API_PORT: int = 8000
 
+    # Database Configuration
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost/postgres"
+
+    # JWT for native auth (RS256)
+    JWT_PRIVATE_KEY: str
+    JWT_PUBLIC_KEY: str
+    JWT_ISSUER: str = "https://ephmrl.ai"
+    JWT_AUDIENCE: str = "https://api.ephemeral.com"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     # Auth0 Configuration
     AUTH0_DOMAIN: str | None = None
     AUTH0_API_AUDIENCE: str | None = None

@@ -1,18 +1,26 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.configuration import Settings
-from src.endpoints.system import router as system_router
+from loguru import logger
 from starlette.middleware.sessions import SessionMiddleware
-from src.configuration import config, Environment
+from src.database import db_manager
+from src.endpoints.system import router as system_router
+from src.endpoints.auth import router as auth_router
+from src.configuration import config, Environment, Settings
 
 
 def lifecycle_provider(settings: Settings):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        app.settings = settings
+        app.state.settings = settings
+        app.state.db = db_manager
+        await db_manager.init(settings.DATABASE_URL)
+        logger.info("Database connection pool initialized")
 
         yield
+        # Shutdown
+        await db_manager.close()
+        logger.info("Database connection pool closed")
 
     return lifespan
 
@@ -40,5 +48,6 @@ def create_app(settings: Settings = None):
         allow_headers=["*"],
     )
     app.include_router(system_router)
+    app.include_router(auth_router)
     app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
     return app
