@@ -4,7 +4,7 @@ from typing import Dict, Optional
 from loguru import logger
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import SecurityScopes, HTTPAuthorizationCredentials, HTTPBearer
 from src.configuration import config
 
@@ -246,40 +246,6 @@ class VerifyToken:
                 # Both failed, raise unauthorized
                 raise UnauthorizedException(f"Invalid token {str(error)}")
 
-    def verify_refresh_token(
-        self,
-        token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-    ) -> Dict:
-        """
-        Verify refresh token specifically (only for native auth).
-        Use this for the /auth/refresh endpoint.
-
-        Auth0 tokens don't use our refresh token pattern - they handle
-        token refresh through their own OAuth flow.
-
-        Args:
-            token: Authorization token from request header
-
-        Returns:
-            Decoded token payload
-
-        Raises:
-            UnauthenticatedException: If no token provided
-            UnauthorizedException: If token is invalid or not a refresh token
-        """
-        if token is None:
-            raise UnauthenticatedException()
-
-        try:
-            payload = self._verify_native_token(token.credentials, token_type="refresh")
-            return payload
-        except jwt.ExpiredSignatureError:
-            raise UnauthorizedException("Refresh token has expired")
-        except jwt.InvalidTokenError as error:
-            raise UnauthorizedException(f"Invalid refresh token: {str(error)}")
-        except jwt.DecodeError as error:
-            raise UnauthorizedException(f"Invalid refresh token format: {str(error)}")
-
     def verify_refresh_token_string(self, token: str) -> Dict:
         """
         Verify refresh token string (for body-based refresh).
@@ -302,6 +268,44 @@ class VerifyToken:
             raise UnauthorizedException(f"Invalid refresh token: {str(error)}")
         except jwt.DecodeError as error:
             raise UnauthorizedException(f"Invalid refresh token format: {str(error)}")
+
+    async def verify_from_cookie(self, access_token: str = Cookie(None)) -> Dict:
+        """
+        Verify access token (both native and Auth0) from HttpOnly cookie.
+        Use this as a dependency for protected routes.
+
+        Args:
+            security_scopes: FastAPI security scopes (not used currently)
+            token: Authorization token from request header
+
+        Returns:
+            Decoded token payload
+
+        Raises:
+            UnauthenticatedException: If no token provided
+            UnauthorizedException: If token is invalid
+        """
+        if access_token is None:
+            raise UnauthenticatedException()
+
+        # Try native token first (more common)
+        try:
+            payload = self._verify_native_token(access_token, token_type="access")
+            return payload
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError,
+        ) as native_error:
+            # If native verification fails, try Auth0
+            try:
+                logger.error(f"Native token verification failed: {str(native_error)}")
+                payload = self._verify_auth0_token(access_token)
+                return payload
+            except Exception as error:
+                logger.error(f"Auth0 token verification failed: {str(error)}")
+                # Both failed, raise unauthorized
+                raise UnauthorizedException(f"Invalid token {str(error)}")
 
 
 auth = VerifyToken()

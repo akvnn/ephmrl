@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Security
+from fastapi import APIRouter, Depends
 from src.models.user import User
-from src.utils import auth, get_current_user
+from src.utils import auth, get_current_user_from_cookie
 
 router = APIRouter()
 
@@ -13,13 +13,13 @@ async def health_check():
 
 # Test route
 @router.get("/api/private")
-def private(auth_result: str = Security(auth.verify)):
+def private(auth_result: str = Depends(auth.verify_from_cookie)):
     """A valid access token is required to access this route"""
     return auth_result
 
 
 # Test route 2
 @router.get("/api/private2")
-def private2(user: User = Security(get_current_user)):
+def private2(user: User = Depends(get_current_user_from_cookie)):
     """A valid access token is required to access this route"""
     return user

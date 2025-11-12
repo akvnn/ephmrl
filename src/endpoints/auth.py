@@ -1,14 +1,13 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Cookie
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.dependency import get_db, get_settings
 from src.crud import user as crud_user
 from src.schemas.user import (
-    RefreshTokenRequest,
     UserCreate,
     UserLogin,
     User,
-    TokenResponse,
     UserCreateFromAuth0,
 )
 from src.security import (
@@ -20,6 +19,7 @@ from src.security import (
 )
 from datetime import timedelta
 from src.configuration import Settings
+from src.utils import clear_auth_cookies, set_auth_cookies
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -42,7 +42,7 @@ async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     return user
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 async def login(
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
@@ -50,7 +50,7 @@ async def login(
 ):
     """
     Native login with email and password.
-    Returns JWT access token (RS256) and refresh token.
+    Returns JWT access token (RS256) and refresh token in HttpOnly cookies.
     """
     user = await crud_user.authenticate_user(
         db, credentials.email, credentials.password
@@ -60,7 +60,6 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Create tokens
@@ -71,14 +70,18 @@ async def login(
 
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    resp = JSONResponse(
+        content={"message": "Login successful"},
+        media_type="application/json",
+        status_code=status.HTTP_200_OK,
     )
 
+    set_auth_cookies(resp, access_token, refresh_token)
 
-@router.post("/oauth/callback", response_model=TokenResponse)
+    return resp
+
+
+@router.post("/oauth/callback")
 async def oauth_callback(
     auth0_data: UserCreateFromAuth0,
     db: AsyncSession = Depends(get_db),
@@ -86,7 +89,7 @@ async def oauth_callback(
 ):
     """
     OAuth callback (Google, GitHub, etc. via Auth0).
-    Creates or links account, returns tokens.
+    Creates or links account, returns tokens in HttpOnly cookies.
     Note: this route be called from frontend after Auth0 login. Auth0 redirect will be to the frontend.
     """
     user, is_new = await crud_user.create_or_update_user_from_auth0(db, auth0_data)
@@ -99,16 +102,20 @@ async def oauth_callback(
 
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    resp = JSONResponse(
+        content={"message": "OAuth login successful"},
+        media_type="application/json",
+        status_code=status.HTTP_200_OK,
     )
 
+    set_auth_cookies(resp, access_token, refresh_token)
 
-@router.post("/refresh", response_model=TokenResponse)
+    return resp
+
+
+@router.post("/refresh")
 async def refresh_access_token(
-    refresh_request: RefreshTokenRequest,
+    refresh_token: str = Cookie(None),
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ):
@@ -116,11 +123,14 @@ async def refresh_access_token(
     Refresh access token using refresh token.
 
     The refresh token must be valid and not expired.
-    Returns a new access token and a new refresh token.
+    Returns a new access token and a new refresh token in HttpOnly cookies.
     """
     try:
+        if not refresh_token:
+            raise UnauthenticatedException("Refresh token missing")
+
         # Decode and verify refresh token
-        payload = auth.verify_refresh_token_string(refresh_request.refresh_token)
+        payload = auth.verify_refresh_token_string(refresh_token)
 
         # Get user ID from token
         user_id_str: str = payload.get("sub")
@@ -150,11 +160,15 @@ async def refresh_access_token(
 
         new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-        return TokenResponse(
-            access_token=new_access_token,
-            refresh_token=new_refresh_token,
-            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        resp = JSONResponse(
+            content={"message": "Token refreshed successfully"},
+            media_type="application/json",
+            status_code=status.HTTP_200_OK,
         )
+
+        set_auth_cookies(resp, new_access_token, new_refresh_token)
+
+        return resp
 
     except UnauthenticatedException:
         raise
@@ -162,3 +176,12 @@ async def refresh_access_token(
         raise
     except Exception as e:
         raise UnauthorizedException(str(e))
+
+
+@router.post("/logout")
+async def logout():
+    resp = JSONResponse(
+        content={"message": "Logged out"}, status_code=status.HTTP_200_OK
+    )
+    clear_auth_cookies(resp)
+    return resp

@@ -18,6 +18,11 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     return result.scalar_one_or_none()
 
 
+async def get_user_by_email_no_defer(db: AsyncSession, email: str) -> Optional[User]:
+    result = await db.execute(select(User).where(User.email == email.lower()))
+    return result.scalar_one_or_none()
+
+
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
     result = await db.execute(
         select(User).where(User.id == user_id).options(defer(User.password_hash))
@@ -65,7 +70,7 @@ async def authenticate_user(
     Authenticate user with email and password
     Returns user if credentials are valid, None otherwise
     """
-    user = await get_user_by_email(db, email)
+    user = await get_user_by_email_no_defer(db, email)
 
     if not user:
         return None

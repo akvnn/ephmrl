@@ -46,19 +46,19 @@ class UserLogin(BaseModel):
         return v.lower()
 
 
-class RefreshTokenRequest(BaseModel):
-    """Request to refresh access token"""
+# class RefreshTokenRequest(BaseModel):
+#     """Request to refresh access token"""
 
-    refresh_token: str
+#     refresh_token: str
 
 
-class TokenResponse(BaseModel):
-    """Token response for native auth"""
+# class TokenResponse(BaseModel):
+#     """Token response for native auth"""
 
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int  # seconds
+#     access_token: str
+#     refresh_token: str
+#     token_type: str = "bearer"
+#     expires_in: int  # seconds
 
 
 class UserCreateFromAuth0(BaseModel):
