@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import axios from "axios";
 
-export const Route = createFileRoute("/_authenticated/auth/callback")({
+export const Route = createFileRoute("/auth/callback")({
   component: RouteComponent,
 });
 
