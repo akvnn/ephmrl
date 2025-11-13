@@ -18,7 +18,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Ephemeral",
       },
     ],
     links: [
@@ -38,7 +38,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="dark">
         <Header />
         <Auth0Provider
           domain={import.meta.env.VITE_AUTH0_DOMAIN}
