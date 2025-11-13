@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import defer
+from sqlalchemy.orm import defer, load_only
 from src.models.user import User
 from src.schemas.user import UserCreate, UserCreateFromAuth0
 from src.security import hash_password, verify_password
@@ -25,7 +25,19 @@ async def get_user_by_email_no_defer(db: AsyncSession, email: str) -> Optional[U
 
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
     result = await db.execute(
-        select(User).where(User.id == user_id).options(defer(User.password_hash))
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            load_only(
+                User.id,
+                User.email,
+                User.username,
+                User.full_name,
+                User.avatar_url,
+                User.is_active,
+                User.email_verified_at,
+            )
+        )
     )
     return result.scalar_one_or_none()
 
@@ -34,7 +46,16 @@ async def get_user_by_auth0_id(db: AsyncSession, auth0_user_id: str) -> Optional
     result = await db.execute(
         select(User)
         .where(User.auth0_user_ids.contains([auth0_user_id]))
-        .options(defer(User.password_hash))
+        .options(
+            load_only(
+                User.email,
+                User.username,
+                User.full_name,
+                User.avatar_url,
+                User.is_active,
+                User.email_verified_at,
+            )
+        )
     )
     return result.scalar_one_or_none()
 

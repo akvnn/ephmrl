@@ -138,8 +138,6 @@ class VerifyToken:
             jwt.exceptions: If token is invalid
         """
         try:
-            logger.debug("Verifying native token")
-
             # Encode public key to bytes
             public_key_bytes = (
                 self.config.JWT_PUBLIC_KEY.encode("utf-8")
@@ -154,7 +152,6 @@ class VerifyToken:
                 audience=self.config.JWT_AUDIENCE,
                 issuer=self.config.JWT_ISSUER,
             )
-            logger.debug(f"Native token payload: {payload}")
             # Verify token type if specified
             if token_type and payload.get("type") != token_type:
                 raise jwt.InvalidTokenError(

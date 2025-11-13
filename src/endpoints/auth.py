@@ -7,7 +7,6 @@ from src.crud import user as crud_user
 from src.schemas.user import (
     UserCreate,
     UserLogin,
-    User,
     UserCreateFromAuth0,
 )
 from src.security import (
@@ -24,8 +23,12 @@ from src.utils import clear_auth_cookies, set_auth_cookies
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
-async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
+async def signup(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
     """
     Native signup with email and password.
     Password is hashed with argon2.
@@ -39,7 +42,23 @@ async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
     # Create user
     user = await crud_user.create_user_native(db, user_data)
-    return user
+
+    access_token = create_access_token(
+        data={"sub": str(user.id), "email": user.email},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+    resp = JSONResponse(
+        content={"message": "Signup successful"},
+        media_type="application/json",
+        status_code=status.HTTP_201_CREATED,
+    )
+
+    set_auth_cookies(resp, access_token, refresh_token)
+
+    return resp
 
 
 @router.post("/login")

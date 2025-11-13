@@ -1,7 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from datetime import datetime
-from typing import List
-import uuid
 
 
 class UserBase(BaseModel):
@@ -76,19 +74,12 @@ class UserCreateFromAuth0(BaseModel):
         return v.lower()
 
 
-class User(UserBase):
+class UserResponse(UserBase):
     """Response model"""
 
-    id: uuid.UUID
-    auth0_user_ids: List[str]
-    auth_providers: List[str]
-    primary_auth_provider: str | None = None
     full_name: str | None = None
     avatar_url: str | None = None
     is_active: bool
     email_verified_at: datetime | None = None
-    last_login: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
