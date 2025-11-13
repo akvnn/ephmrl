@@ -41,7 +41,7 @@ async def signup(
         )
 
     # Create user
-    user = await crud_user.create_user_native(db, user_data)
+    user = await crud_user.create_user_with_org_native(db, user_data)
 
     access_token = create_access_token(
         data={"sub": str(user.id), "email": user.email},

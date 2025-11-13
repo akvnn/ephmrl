@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import defer, load_only
+from src.crud.organization import create_organization
 from src.models.user import User
 from src.schemas.user import UserCreate, UserCreateFromAuth0
 from src.security import hash_password, verify_password
@@ -81,6 +82,37 @@ async def create_user_native(db: AsyncSession, user: UserCreate) -> User:
     db.add(db_user)
     await db.flush()
     await db.refresh(db_user)
+    return db_user
+
+
+async def create_user_with_org_native(db: AsyncSession, user: UserCreate) -> User:
+    # Generate Auth0-style user ID for native ephmrl users
+    native_auth0_id = f"ephmrl|{uuid.uuid4()}"
+
+    db_user = User(
+        email=user.email.lower(),
+        username=user.username,
+        full_name=user.full_name,
+        password_hash=hash_password(user.password),
+        auth0_user_ids=[native_auth0_id],
+        auth_providers=["ephmrl"],
+        primary_auth_provider="ephmrl",
+        email_verified_at=None,  # Require email verification
+    )
+    db.add(db_user)
+    await db.flush()  # Only flush once here
+
+    org_name = f"{db_user.username}'s Organization"
+    org_slug = f"{db_user.username}-{str(db_user.id)[:6]}".lower()
+
+    await create_organization(
+        db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False
+    )
+
+    # Commit everything together
+    await db.commit()
+    await db.refresh(db_user)
+
     return db_user
 
 
@@ -194,5 +226,15 @@ async def create_or_update_user_from_auth0(
     )
     db.add(db_user)
     await db.flush()
+
+    org_name = f"{db_user.username}'s Organization"
+    org_slug = f"{db_user.username}-{str(db_user.id)[:6]}".lower()
+
+    await create_organization(
+        db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False
+    )
+
+    # Commit everything together
+    await db.commit()
     await db.refresh(db_user)
     return db_user, True

@@ -11,6 +11,7 @@ dependencies = [
     "itsdangerous>=2.2.0",
     "loguru>=0.7.3",
     "passlib[argon2]>=1.7.4",
+    "polar-sdk>=0.28.0",
     "pydantic-settings>=2.11.0",
     "pydantic[email]>=2.12.4",
     "pyjwt[crypto]>=2.10.1",

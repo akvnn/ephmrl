@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # Session Configuration
     SESSION_SECRET: str | None = None
 
+    # Polar Configuration
+    POLAR_WEBHOOK_SECRET: str | None = None
+
     @field_validator("AUTH0_ALGORITHMS", mode="before")
     @classmethod
     def parse_algorithms(cls, v):

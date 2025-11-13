@@ -7,7 +7,7 @@ import asyncio
 
 from src.configuration import config as settings
 from src.database import Base
-from src.models.user import User  # Import ALL models here!
+import src.models  # Ensure models are imported for metadata
 
 config = context.config
 

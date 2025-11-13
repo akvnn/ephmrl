@@ -2,12 +2,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from starlette.middleware.sessions import SessionMiddleware
+
+# from starlette.middleware.sessions import SessionMiddleware
 from src.database import db_manager
 from src.endpoints.system import router as system_router
 from src.endpoints.auth import router as auth_router
 from src.endpoints.user import router as user_router
-from src.configuration import config, Environment, Settings
+from src.endpoints.organization import router as organization_router
+from src.configuration import Environment, Settings
 
 
 def lifecycle_provider(settings: Settings):
@@ -51,5 +53,6 @@ def create_app(settings: Settings = None):
     app.include_router(system_router)
     app.include_router(auth_router)
     app.include_router(user_router)
-    app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
+    app.include_router(organization_router)
+    # app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
     return app

@@ -2,6 +2,8 @@ from sqlalchemy import Column, String, Boolean, DateTime, func, Index
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 import uuid
 from src.database import Base
+from sqlalchemy.orm import relationship
+from src.models.relationship import org_members
 
 
 class User(Base):
@@ -43,6 +45,25 @@ class User(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+    organizations = relationship(
+        "Organization",
+        secondary=org_members,
+        back_populates="members",
+        lazy="selectin",
+        primaryjoin="User.id == org_members.c.user_id",
+        secondaryjoin="Organization.id == org_members.c.org_id",
+    )
+
+    # Optional to track who invited whom
+    invited_memberships = relationship(
+        "Organization",
+        secondary=org_members,
+        lazy="noload",
+        primaryjoin="User.id == org_members.c.invited_by",
+        secondaryjoin="Organization.id == org_members.c.org_id",
+        viewonly=True,  # Read-only relationship
     )
 
     # Indexes

@@ -13,13 +13,13 @@ async def health_check():
 
 # Test route
 @router.get("/api/private")
-def private(auth_result: str = Depends(auth.verify_from_cookie)):
+async def private(auth_result: str = Depends(auth.verify_from_cookie)):
     """A valid access token is required to access this route"""
     return auth_result
 
 
 # Test route 2
 @router.get("/api/private2")
-def private2(user: User = Depends(get_current_user_from_cookie)):
+async def private2(user: User = Depends(get_current_user_from_cookie)):
     """A valid access token is required to access this route"""
     return user
