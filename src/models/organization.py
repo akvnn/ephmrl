@@ -63,6 +63,7 @@ class Organization(Base):
 
     # Relationships
     # Organization -> Users (who are members)
+    # TODO: potentially change lazy to noload to avoid unnecessary loading
     members = relationship(
         "User",
         secondary=org_members,

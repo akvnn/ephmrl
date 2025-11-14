@@ -8,11 +8,44 @@ from itertools import groupby
 
 import uuid
 
+from src.models.permission import Permission
 from src.models.role import Role
 from src.models.relationship import org_members, user_roles
 from src.models.organization import Organization, SubscriptionStatus
 from src.models.user import User
 from src.constants import FREE_PLAN_ID, OWNER_ROLE_ID
+from src.schemas.role import RoleInfo
+from src.schemas.user import UserMemberResponse
+
+
+async def validate_user_permission_for_org(
+    db: AsyncSession, user_id: uuid.UUID, org_id: uuid.UUID, permission: str
+) -> bool:
+    """
+    Validate if a user has a specific permission in an organization.
+
+    Args:
+        db: Database session
+        user_id: User UUID
+        org_id: Organization UUID
+        permission: Permission string to check
+    Returns:
+        True if user has permission, False otherwise
+    """
+    query = (
+        select(func.count())
+        .select_from(user_roles)
+        .join(Role, user_roles.c.role_id == Role.id)
+        .where(
+            user_roles.c.user_id == user_id,
+            user_roles.c.org_id == org_id,
+            Role.permissions.any(Permission.name == permission),
+        )
+    )
+
+    result = await db.execute(query)
+    count = result.scalar() or 0
+    return count > 0
 
 
 async def create_organization(
@@ -67,7 +100,7 @@ async def create_organization(
 
 async def get_organization_by_id(
     db: AsyncSession, org_id: uuid.UUID, include_members: bool = False
-) -> Optional[Organization]:
+):
     """
     Get organization by ID.
 
@@ -78,13 +111,56 @@ async def get_organization_by_id(
     Returns:
         Organization or None if not found
     """
-    query = select(Organization).where(Organization.id == org_id)
+    query = (
+        select(Organization)
+        .where(Organization.id == org_id)
+        .options(selectinload(Organization.plan))
+    )
 
     if include_members:
         query = query.options(selectinload(Organization.members))
 
     result = await db.execute(query)
-    return result.scalar_one_or_none()
+    org = result.scalar_one_or_none()
+    members_response = []
+
+    if org and include_members:
+        user_ids = [member.id for member in org.members]
+
+        roles_query = (
+            select(user_roles.c.user_id, Role.name, user_roles.c.assigned_at)
+            .select_from(user_roles)
+            .join(Role, user_roles.c.role_id == Role.id)
+            .where(user_roles.c.org_id == org_id, user_roles.c.user_id.in_(user_ids))
+        )
+
+        roles_result = await db.execute(roles_query)
+        user_roles_map = {}
+        for row in roles_result:
+            if row.user_id not in user_roles_map:
+                user_roles_map[row.user_id] = []
+            user_roles_map[row.user_id].append(
+                RoleInfo(name=row.name, assigned_at=row.assigned_at)
+            )
+
+        for member in org.members:
+            member_el = UserMemberResponse.model_validate(
+                {**member.__dict__, "roles": user_roles_map.get(member.id, [])}
+            )
+            members_response.append(member_el)
+        # Alternative approach
+        # for member in org.members:
+        #     member_data = {
+        #         "email": member.email,
+        #         "username": member.username,
+        #         "full_name": member.full_name,
+        #         "avatar_url": member.avatar_url,
+        #         "is_active": member.is_active,
+        #         "email_verified_at": member.email_verified_at,
+        #         "roles": user_roles_map.get(member.id, [])
+        #     }
+        #     members_response.append(UserMemberResponse(**member_data))
+    return org, members_response
 
 
 async def get_organization_by_slug(

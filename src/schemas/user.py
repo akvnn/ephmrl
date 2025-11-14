@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from datetime import datetime
 
+from src.schemas.role import RoleInfo
+
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -77,9 +79,18 @@ class UserCreateFromAuth0(BaseModel):
 class UserResponse(UserBase):
     """Response model"""
 
-    full_name: str | None = None
     avatar_url: str | None = None
     is_active: bool
     email_verified_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserMemberResponse(UserResponse):
+    """Member response model"""
+
+    roles: list[
+        RoleInfo
+    ] = []  # Note: this will always be one role per user in current implementation
 
     model_config = ConfigDict(from_attributes=True)

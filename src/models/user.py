@@ -46,7 +46,8 @@ class User(Base):
         onupdate=func.now(),
         nullable=False,
     )
-
+    # Relationships
+    # TODO: potentially change lazy to noload to avoid unnecessary loading
     organizations = relationship(
         "Organization",
         secondary=org_members,
