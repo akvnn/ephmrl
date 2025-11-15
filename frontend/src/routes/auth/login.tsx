@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,43 +17,78 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
 });
 
-const loginSchema = z.object({
+const authSchema = z.object({
   email: z.string().email("Invalid email address"),
+  full_name: z.string().optional(),
   password: z.string().min(1, "Password is required"),
+  confirmPassword: z.string().optional(),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type AuthFormValues = z.infer<typeof authSchema>;
 
 function LoginPage() {
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const login = useAuthStore((state) => state.login);
+  const signup = useAuthStore((state) => state.signup);
   const isLoading = useAuthStore((state) => state.isLoading);
   const navigate = useNavigate();
   const { loginWithRedirect } = useAuth0();
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authSchema),
     defaultValues: {
       email: "",
+      full_name: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (values: LoginFormValues) => {
+  const onSubmit = async (values: AuthFormValues) => {
     try {
-      await login(values);
-      navigate({ to: "/" });
+      if (mode === "signup") {
+        if (!values.full_name || values.full_name.length < 2) {
+          form.setError("full_name", {
+            message: "Name must be at least 2 characters",
+          });
+          return;
+        }
+        if (values.password.length < 8) {
+          form.setError("password", {
+            message: "Password must be at least 8 characters",
+          });
+          return;
+        }
+        if (values.password !== values.confirmPassword) {
+          form.setError("confirmPassword", {
+            message: "Passwords don't match",
+          });
+          return;
+        }
+        await signup({
+          email: values.email,
+          full_name: values.full_name,
+          password: values.password,
+        });
+      } else {
+        await login({
+          email: values.email,
+          password: values.password,
+        });
+      }
+      navigate({ to: "/control/dashboard" });
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Auth error:", error);
     }
   };
 
@@ -79,12 +114,53 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="text-2xl">
+            {mode === "login" ? "Welcome back" : "Create an account"}
+          </CardTitle>
+          <CardDescription>
+            {mode === "login"
+              ? "Sign in to your account to continue"
+              : "Enter your details below to create your account"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={mode === "login" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setMode("login")}
+            >
+              Log in
+            </Button>
+            <Button
+              type="button"
+              variant={mode === "signup" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setMode("signup")}
+            >
+              Sign up
+            </Button>
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {mode === "signup" && (
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="email"
@@ -121,8 +197,34 @@ function LoginPage() {
                 )}
               />
 
+              {mode === "signup" && (
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Log in"}
+                {isLoading
+                  ? mode === "signup"
+                    ? "Creating account..."
+                    : "Logging in..."
+                  : mode === "signup"
+                    ? "Sign up"
+                    : "Log in"}
               </Button>
             </form>
           </Form>
@@ -180,14 +282,6 @@ function LoginPage() {
             Sign in with GitHub
           </Button>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/auth/signup" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

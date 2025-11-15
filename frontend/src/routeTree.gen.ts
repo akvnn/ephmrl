@@ -9,16 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ControlRouteImport } from './routes/control'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ControlDashboardRouteImport } from './routes/control/dashboard'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 
+const ControlRoute = ControlRouteImport.update({
+  id: '/control',
+  path: '/control',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ControlDashboardRoute = ControlDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ControlRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
@@ -43,47 +55,65 @@ const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/control': typeof ControlRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/control/dashboard': typeof ControlDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/control': typeof ControlRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/control/dashboard': typeof ControlDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/control': typeof ControlRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/control/dashboard': typeof ControlDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/control'
     | '/api/checkout'
     | '/auth/callback'
     | '/auth/login'
     | '/auth/signup'
+    | '/control/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/checkout' | '/auth/callback' | '/auth/login' | '/auth/signup'
+  to:
+    | '/'
+    | '/control'
+    | '/api/checkout'
+    | '/auth/callback'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/control/dashboard'
   id:
     | '__root__'
     | '/'
+    | '/control'
     | '/api/checkout'
     | '/auth/callback'
     | '/auth/login'
     | '/auth/signup'
+    | '/control/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ControlRoute: typeof ControlRouteWithChildren
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -92,12 +122,26 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/control': {
+      id: '/control'
+      path: '/control'
+      fullPath: '/control'
+      preLoaderRoute: typeof ControlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/control/dashboard': {
+      id: '/control/dashboard'
+      path: '/dashboard'
+      fullPath: '/control/dashboard'
+      preLoaderRoute: typeof ControlDashboardRouteImport
+      parentRoute: typeof ControlRoute
     }
     '/auth/signup': {
       id: '/auth/signup'
@@ -130,8 +174,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ControlRouteChildren {
+  ControlDashboardRoute: typeof ControlDashboardRoute
+}
+
+const ControlRouteChildren: ControlRouteChildren = {
+  ControlDashboardRoute: ControlDashboardRoute,
+}
+
+const ControlRouteWithChildren =
+  ControlRoute._addFileChildren(ControlRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ControlRoute: ControlRouteWithChildren,
   ApiCheckoutRoute: ApiCheckoutRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
