@@ -52,8 +52,11 @@ class LLMSubinstance(Base):
     is_dedicated = Column(Boolean, default=False, nullable=False)
 
     # Relationships
-    organization = relationship("Organization", back_populates="credit_transactions")
+    organization = relationship("Organization", back_populates="llm_subinstances")
     user = relationship("User")
+    llm_instance = relationship(
+        "LLMInstance", back_populates="llm_subinstances", lazy="selectin"
+    )
 
     __table_args__ = (
         Index("ix_llm_subinstances_org_created", "org_id", "created_at"),
@@ -84,11 +87,13 @@ class LLMInstance(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    subinstances = relationship(
-        "LLMSubinstance", back_populates="llm_instance", lazy="selectin"
-    )
+    llm_subinstances = relationship(
+        "LLMSubinstance", back_populates="llm_instance", lazy="noload"
+    )  # eager
 
-    listed_llm = relationship("ListedLLM", back_populates="llm_instance", lazy="eager")
+    listed_llm = relationship(
+        "ListedLLM", back_populates="llm_instance", lazy="selectin"
+    )  # eager
 
     gpus = relationship(
         "GPU",
@@ -121,6 +126,6 @@ class ListedLLM(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    instances = relationship(
-        "LLMInstance", back_populates="listed_llm", lazy="selectin"
+    llm_instance = relationship(
+        "LLMInstance", back_populates="listed_llm", lazy="noload"
     )  # not necessary but allows to get instance for each listedllm for admin dashboard

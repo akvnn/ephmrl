@@ -45,14 +45,14 @@ class Machine(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    gpus = relationship("GPU", back_populates="machine", lazy="selectin")
+    gpus = relationship("GPU", back_populates="machine", lazy="noload")
 
     organization = relationship(
         "Organization", back_populates="machines", lazy="selectin"
     )
 
     hosting_contract = relationship(
-        "HostingContract", back_populates="machines", lazy="selectin"
+        "HostingContract", back_populates="machines", lazy="noload"
     )
 
     __table_args__ = (

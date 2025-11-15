@@ -45,7 +45,7 @@ class GPU(Base):
         "LLMInstance",
         secondary=llm_instance_gpus,
         back_populates="gpus",
-        lazy="selectin",
+        lazy="noload",
     )
     machine = relationship("Machine", back_populates="gpus", lazy="selectin")
 
