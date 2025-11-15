@@ -5,7 +5,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="text-lg font-bold text-primary mb-4 font-geo">
-              EPHEMERAL.AI
+              EPHMRL.AI
             </h3>
             <p className="text-muted-foreground text-sm font-montserrat">
               The first platform designed for organizations to rent dedicated
@@ -124,7 +124,7 @@ export default function Footer() {
         </div>
         <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-sm font-montserrat">
-            © 2025 Ephemeral.AI. All rights reserved.
+            © 2025 EPHMRL.AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a
