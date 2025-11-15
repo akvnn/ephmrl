@@ -11,6 +11,10 @@ class OrganizationRequest(BaseModel):
     organization_id: str
 
 
+class OrganizationMemberRequest(OrganizationRequest):
+    user_email: str
+
+
 async def get_org_params(
     id: str = Query(..., alias="organization_id"),
 ) -> OrganizationRequest:

@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete, func
+from sqlalchemy import select, delete, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,12 +8,12 @@ from itertools import groupby
 
 import uuid
 
+from src.crud.user import get_user_by_email
 from src.models.permission import Permission
 from src.models.role import Role
 from src.models.relationship import org_members, user_roles
-from src.models.organization import Organization, SubscriptionStatus
+from src.models.organization import Organization
 from src.models.user import User
-from src.constants import FREE_PLAN_ID, OWNER_ROLE_ID
 from src.schemas.role import RoleInfo
 from src.schemas.user import UserMemberResponse
 
@@ -46,56 +46,6 @@ async def validate_user_permission_for_org(
     result = await db.execute(query)
     count = result.scalar() or 0
     return count > 0
-
-
-async def create_organization(
-    db: AsyncSession,
-    name: str,
-    slug: str,
-    creator_user_id: uuid.UUID,
-    commit: bool = True,
-) -> Organization:
-    """
-    Create a new organization and assign creator as owner.
-
-    Args:
-        name: Organization display name
-        slug: Unique URL-friendly identifier
-        creator_user_id: User who creates the org (becomes owner)
-        commit: Whether to commit the transaction
-
-    Returns:
-        Created Organization object
-    """
-    # free_plan = await db.execute(select(Plan).where(Plan.name == PlanType.FREE.value))
-    # free_plan = free_plan.scalar_one()
-
-    org = Organization(
-        name=name,
-        slug=slug.lower(),
-        plan_id=FREE_PLAN_ID,
-        subscription_status=SubscriptionStatus.ACTIVE.value,
-    )
-
-    db.add(org)
-    await db.flush()  # Get org.id before adding relationships
-
-    # Add creator as member
-    await db.execute(insert(org_members).values(org_id=org.id, user_id=creator_user_id))
-
-    # Assign owner role to creator
-    # owner_role = await db.execute(select(Role).where(Role.name == "owner"))
-    # owner_role = owner_role.scalar_one()
-
-    await db.execute(
-        insert(user_roles).values(
-            user_id=creator_user_id, role_id=OWNER_ROLE_ID, org_id=org.id
-        )
-    )
-    if commit:
-        await db.commit()
-        await db.refresh(org)
-    return org
 
 
 async def get_organization_by_id(
@@ -209,7 +159,7 @@ async def get_user_organizations(
 
 async def add_user_to_organization(
     db: AsyncSession,
-    user_id: uuid.UUID,
+    user_email: str,
     org_id: uuid.UUID,
     invited_by: Optional[uuid.UUID] = None,
     default_role: str = "member",
@@ -219,7 +169,7 @@ async def add_user_to_organization(
     Idempotent - safe to call multiple times.
 
     Args:
-        user_id: User to add
+        user_email: User to add
         org_id: Organization to add user to
         invited_by: Optional user_id of inviter
         default_role: Role name to assign (default: "member")
@@ -227,6 +177,12 @@ async def add_user_to_organization(
     Returns:
         True if user was added, False if already a member
     """
+    # Get user id from email
+    user_id = await get_user_by_email(db, user_email)
+
+    if not user_id:
+        return False
+
     # Add to org_members
     stmt = (
         pg_insert(org_members)
@@ -254,19 +210,26 @@ async def add_user_to_organization(
 
 
 async def remove_user_from_organization(
-    db: AsyncSession, user_id: uuid.UUID, org_id: uuid.UUID
+    db: AsyncSession, user_email: str, org_id: uuid.UUID
 ) -> bool:
     """
     Remove user from organization.
     Cascades to remove all role assignments in this org.
 
     Args:
-        user_id: User to remove
+        user_email: User to remove
         org_id: Organization to remove from
 
     Returns:
         True if user was removed, False if wasn't a member
     """
+
+    # Get user id from email
+    user_id = await get_user_by_email(db, user_email)
+
+    if not user_id:
+        return False
+
     # Remove from org_members (primary relationship)
     result = await db.execute(
         delete(org_members).where(

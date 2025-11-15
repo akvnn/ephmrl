@@ -19,6 +19,7 @@ class SubscriptionStatus(str, enum.Enum):
     ACTIVE = "active"
     CANCELED = "canceled"
     PAST_DUE = "past_due"
+    TRIALING = "trialing"
 
 
 class Organization(Base):
@@ -35,7 +36,9 @@ class Organization(Base):
     subscription_canceled_at = Column(
         DateTime(timezone=True), nullable=True
     )  # details would be in PlanChangeHistory to free plan
-    subscription_ends_at = Column(DateTime(timezone=True), nullable=True)
+    subscription_ends_at = Column(
+        DateTime(timezone=True), nullable=True
+    )  # e.g., 7 day trial would end in 7 days
 
     # Track plan changes
     previous_plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=True)
@@ -75,7 +78,11 @@ class Organization(Base):
     # Organization -> Plan
     plan = relationship("Plan", foreign_keys=[plan_id], back_populates="organizations")
     previous_plan = relationship("Plan", foreign_keys=[previous_plan_id])
+    # Organization -> Project
+    projects = relationship("Project", back_populates="organization")
     # Organization -> CreditTransactions
     credit_transactions = relationship(
         "CreditTransaction", back_populates="organization"
     )
+    llm_subinstances = relationship("LLMSubinstance", back_populates="organization")
+    machines = relationship("Machine", back_populates="organization")

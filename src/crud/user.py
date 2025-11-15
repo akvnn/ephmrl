@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.orm import defer, load_only
-from src.crud.organization import create_organization
+from src.constants import FREE_PLAN_ID, OWNER_ROLE_ID
+from src.models.organization import Organization, SubscriptionStatus
 from src.models.user import User
 from src.schemas.user import UserCreate, UserCreateFromAuth0
+from src.models.relationship import org_members, user_roles
 from src.security import hash_password, verify_password
 import datetime
 import uuid
@@ -59,6 +61,56 @@ async def get_user_by_auth0_id(db: AsyncSession, auth0_user_id: str) -> Optional
         )
     )
     return result.scalar_one_or_none()
+
+
+async def create_organization(
+    db: AsyncSession,
+    name: str,
+    slug: str,
+    creator_user_id: uuid.UUID,
+    commit: bool = True,
+) -> Organization:
+    """
+    Create a new organization and assign creator as owner.
+
+    Args:
+        name: Organization display name
+        slug: Unique URL-friendly identifier
+        creator_user_id: User who creates the org (becomes owner)
+        commit: Whether to commit the transaction
+
+    Returns:
+        Created Organization object
+    """
+    # free_plan = await db.execute(select(Plan).where(Plan.name == PlanType.FREE.value))
+    # free_plan = free_plan.scalar_one()
+
+    org = Organization(
+        name=name,
+        slug=slug.lower(),
+        plan_id=FREE_PLAN_ID,
+        subscription_status=SubscriptionStatus.ACTIVE.value,
+    )
+
+    db.add(org)
+    await db.flush()  # Get org.id before adding relationships
+
+    # Add creator as member
+    await db.execute(insert(org_members).values(org_id=org.id, user_id=creator_user_id))
+
+    # Assign owner role to creator
+    # owner_role = await db.execute(select(Role).where(Role.name == "owner"))
+    # owner_role = owner_role.scalar_one()
+
+    await db.execute(
+        insert(user_roles).values(
+            user_id=creator_user_id, role_id=OWNER_ROLE_ID, org_id=org.id
+        )
+    )
+    if commit:
+        await db.commit()
+        await db.refresh(org)
+    return org
 
 
 async def create_user_native(db: AsyncSession, user: UserCreate) -> User:

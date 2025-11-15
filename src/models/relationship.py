@@ -75,3 +75,20 @@ role_permissions = Table(
         "granted_at", DateTime(timezone=True), server_default=func.now(), nullable=False
     ),
 )
+
+llm_instance_gpus = Table(
+    "llm_instance_gpus",
+    Base.metadata,
+    Column(
+        "llm_instance_id",
+        UUID(as_uuid=True),
+        ForeignKey("llm_instances.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "gpu_id",
+        UUID(as_uuid=True),
+        ForeignKey("gpus.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)

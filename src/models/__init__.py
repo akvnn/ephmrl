@@ -5,6 +5,7 @@ from src.models.relationship import (
     org_members,
     user_roles,
     role_permissions,
+    llm_instance_gpus,
 )  # Association tables first
 from src.models.plan import Plan
 from src.models.permission import Permission
@@ -12,16 +13,29 @@ from src.models.role import Role
 from src.models.user import User
 from src.models.organization import Organization
 from src.models.transaction import CreditTransaction
+from src.models.project import Project
+from src.models.llm import LLMSubinstance, LLMInstance, ListedLLM
+from src.models.gpu import GPU
+from src.models.hosting import HostingContract
+from src.models.machine import Machine
 
 __all__ = [
     "Base",
     "org_members",
     "user_roles",
     "role_permissions",
+    "llm_instance_gpus",
     "Plan",
     "Permission",
     "Role",
     "User",
+    "Project",
+    "LLMSubinstance",
+    "LLMInstance",
+    "ListedLLM",
+    "GPU",
+    "Machine",
+    "HostingContract",
     "Organization",
     "CreditTransaction",
 ]
