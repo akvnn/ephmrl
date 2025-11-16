@@ -11,6 +11,15 @@ import uuid
 from fastapi import Response
 from typing import Optional
 
+import random
+import string
+
+
+def generate_slug_suffix(length: int = 6) -> str:
+    """Generate a random alphanumeric suffix for slugs"""
+    characters = string.ascii_lowercase + string.digits
+    return "".join(random.choices(characters, k=length))
+
 
 def set_auth_cookies(
     response: Response, access_token: str, refresh_token: Optional[str] = None

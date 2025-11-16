@@ -9,6 +9,7 @@ from src.endpoints.system import router as system_router
 from src.endpoints.auth import router as auth_router
 from src.endpoints.user import router as user_router
 from src.endpoints.organization import router as organization_router
+from src.endpoints.project import router as project_router
 from src.configuration import Environment, Settings
 
 
@@ -54,5 +55,6 @@ def create_app(settings: Settings = None):
     app.include_router(auth_router)
     app.include_router(user_router)
     app.include_router(organization_router)
+    app.include_router(project_router)
     # app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
     return app

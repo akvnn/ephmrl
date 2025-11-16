@@ -1,8 +1,16 @@
 import uuid
 from fastapi import Query
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from src.models.organization import Organization
 from src.schemas.user import UserMemberResponse
+
+
+class OrganizationBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+
+class OrganizationCreate(OrganizationBase):
+    pass
 
 
 class OrganizationRequest(BaseModel):
