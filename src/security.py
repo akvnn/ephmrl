@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 import datetime
-from typing import Dict, Optional
+from typing import Optional
 from loguru import logger
 
 import jwt
@@ -123,7 +123,7 @@ class VerifyToken:
         jwks_url = f"https://{self.config.AUTH0_DOMAIN}/.well-known/jwks.json"
         self.jwks_client = jwt.PyJWKClient(jwks_url)
 
-    def _verify_native_token(self, token: str, token_type: str | None = None) -> Dict:
+    def _verify_native_token(self, token: str, token_type: str | None = None) -> dict:
         """
         Verify native (non-Auth0) JWT token signed with your RS256 keys
 
@@ -163,7 +163,7 @@ class VerifyToken:
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, jwt.DecodeError):
             raise
 
-    def _verify_auth0_token(self, token: str) -> Dict:
+    def _verify_auth0_token(self, token: str) -> dict:
         """
         Verify Auth0 OAuth token
 
@@ -201,7 +201,7 @@ class VerifyToken:
         self,
         security_scopes: SecurityScopes,
         token: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer()),
-    ) -> Dict:
+    ) -> dict:
         """
         Verify access token (both native and Auth0).
         Use this as a dependency for protected routes.
@@ -243,7 +243,7 @@ class VerifyToken:
                 # Both failed, raise unauthorized
                 raise UnauthorizedException(f"Invalid token {str(error)}")
 
-    def verify_refresh_token_string(self, token: str) -> Dict:
+    def verify_refresh_token_string(self, token: str) -> dict:
         """
         Verify refresh token string (for body-based refresh).
 
@@ -266,7 +266,7 @@ class VerifyToken:
         except jwt.DecodeError as error:
             raise UnauthorizedException(f"Invalid refresh token format: {str(error)}")
 
-    async def verify_from_cookie(self, access_token: str = Cookie(None)) -> Dict:
+    async def verify_from_cookie(self, access_token: str = Cookie(None)) -> dict:
         """
         Verify access token (both native and Auth0) from HttpOnly cookie.
         Use this as a dependency for protected routes.

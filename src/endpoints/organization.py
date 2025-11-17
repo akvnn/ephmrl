@@ -20,7 +20,7 @@ from src.crud.organization import OrganizationCRUD, validate_user_permission_glo
 router = APIRouter(prefix="/organization", tags=["organization"])
 
 
-@router.get("/me", response_model=list[OrganizationResponse])
+@router.get("/me/all", response_model=list[OrganizationResponse])
 async def get_current_orgs(
     user: User = Depends(get_current_user_from_cookie),
     db: AsyncSession = Depends(get_db),
@@ -33,7 +33,7 @@ async def get_current_orgs(
         raise HTTPException(status_code=500, detail="Something went wrong.")
 
 
-@router.get("/{organization_id}", response_model=OrganizationResponse)
+@router.get("/me", response_model=OrganizationResponse)
 async def get_org(
     params: OrganizationRequest = Depends(get_org_params),
     user: User = Depends(get_current_user_from_cookie),

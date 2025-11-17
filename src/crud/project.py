@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
-from typing import List
 from datetime import datetime
 import uuid
 
@@ -85,7 +84,7 @@ class ProjectCRUD:
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
-    ) -> List[Project]:
+    ) -> list[Project]:
         """Get all projects for an organization"""
         query = select(Project).where(Project.org_id == org_id)
 
@@ -105,7 +104,7 @@ class ProjectCRUD:
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
-    ) -> List[Project]:
+    ) -> list[Project]:
         """Get all projects created by a specific user"""
         query = select(Project).where(
             and_(
@@ -247,7 +246,7 @@ class ProjectCRUD:
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
-    ) -> List[Project]:
+    ) -> list[Project]:
         """Search projects by name"""
         query = select(Project).where(
             and_(

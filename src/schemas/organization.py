@@ -16,6 +16,7 @@ class OrganizationCreate(OrganizationBase):
 class OrganizationRequest(BaseModel):
     """Base param model"""
 
+    # TODO: change this to UUID and remove unnecessary casting to UUID
     organization_id: str
 
 

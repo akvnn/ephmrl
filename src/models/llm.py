@@ -78,6 +78,9 @@ class LLMInstance(Base):
         JSONB, default={}, nullable=False
     )  # Default configuration for this model
     status = Column(String(50), nullable=False)  # e.g., "active", "down"
+    maximum_tenants = Column(
+        Integer, nullable=False
+    )  # only if llm subinstance is not dedicated, otherwise ignored
     listed_llm_id = Column(
         UUID(as_uuid=True), ForeignKey("listed_llms.id"), nullable=False
     )
