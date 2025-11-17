@@ -19,12 +19,15 @@ from src.configuration import Environment, Settings
 def lifecycle_provider(settings: Settings):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = db_manager
+        # Startup
         await db_manager.init(settings.DATABASE_URL)
         logger.info("Database connection pool initialized")
 
-        yield
+        yield {
+            "settings": settings,
+            "db": db_manager,
+        }
+
         # Shutdown
         await db_manager.close()
         logger.info("Database connection pool closed")
