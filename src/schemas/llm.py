@@ -4,6 +4,13 @@ from uuid import UUID
 from datetime import datetime
 
 
+class ModelQuota(BaseModel):
+    model_params: str
+    max_count: int
+    current_count: int
+    remaining: int
+
+
 class LLMSubinstanceBase(BaseModel):
     id: UUID
     org_id: UUID

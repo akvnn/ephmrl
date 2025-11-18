@@ -46,15 +46,27 @@ async def create_llm_subinstance(
         raise UnauthorizedException(
             detail="User does not have permission or organization does not exist."
         )
+    remaining_quota = await LLMSubinstanceCRUD.get_org_remaining_quota(
+        db, org_id, for_update=True
+    )
 
-    # TODO: check org's plan and current usage here
-    # TODO: check availability of the llm, whether a new one need to be provisioned, etc
+    listed_llm, llm_instance = await LLMInstanceCRUD.get_llm_from_listed_llm_id(
+        db, data.id
+    )
+    llm_instance_id = llm_instance.id if llm_instance else None
 
-    llm_instance_id = await LLMInstanceCRUD.get_instance_id_from_listed_llm(db, data.id)
-
+    # TODO: provision a new LLM is none is available or exceeds max_tenants, but only if the org has quota
     if not llm_instance_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="LLM is not available"
+        )
+
+    if not await LLMInstanceCRUD.can_provision_instance(
+        remaining_quota, listed_llm.base_config.get("parameters"), data.is_dedicated
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot provision instance: quota exceeded",
         )
 
     subinstance = await LLMSubinstanceCRUD.create(

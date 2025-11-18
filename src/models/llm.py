@@ -120,7 +120,7 @@ class ListedLLM(Base):
     # provider = Column(String(100), nullable=False)  # e.g., "vLLM"
     base_config = Column(
         JSONB, default={}, nullable=False
-    )  # Default configuration for this model
+    )  # Default configuration for this model. Includes number of parameters.
     status = Column(String(50), nullable=False)  # e.g., "live", "deleted"
 
     created_at = Column(

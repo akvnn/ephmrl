@@ -34,7 +34,20 @@ class Plan(Base):
 
     # Features (JSON)
     features = Column(JSONB, default={}, nullable=False)
-    # Example: {"api_access": true, "priority_support": true, "custom_domain": false}
+    # Structure:
+    # {
+    #   "api_access": true,
+    #   "priority_support": true,
+    #    "custom_domain": true,
+    #   "llm_limits": {
+    #     "max_dedicated_llms": 2,
+    #     "max_instances": 4,
+    #     "instance_limits": [
+    #       {"max_params": "270B", "max_count": 2},
+    #       {"max_params": "70B", "max_count": 2}
+    #     ]
+    #   }
+    # }
 
     is_active = Column(Boolean, default=True, nullable=False)
 

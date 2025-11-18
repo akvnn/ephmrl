@@ -7,6 +7,7 @@ class ListedLLMBase(BaseModel):
     name: str
     model_name: str
     slug: str
+    base_config: dict
     description: str | None = None
 
 

@@ -58,6 +58,7 @@ def upgrade() -> None:
             'slug': 'llama-4-8b',
             'image_location': 'vllm/vllm-openai:latest',
             'base_config': {
+                'parameters': '8B',
                 'temperature': 0.7,
                 'top_p': 0.9,
                 'max_tokens': 2048,
@@ -74,6 +75,7 @@ def upgrade() -> None:
             'slug': 'mistral-7b-instruct',
             'image_location': 'vllm/vllm-openai:latest',
             'base_config': {
+                'parameters': '7B',
                 'temperature': 0.7,
                 'top_p': 0.95,
                 'max_tokens': 4096,
