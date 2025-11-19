@@ -4,19 +4,17 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-lg font-bold text-primary mb-4 font-geo">
-              EPHMRL.AI
-            </h3>
-            <p className="text-muted-foreground text-sm font-montserrat">
+            <h3 className="text-lg font-bold text-primary mb-4">Ephmrl</h3>
+            <p className="text-muted-foreground text-sm font-inter">
               The first platform designed for organizations to rent dedicated
               LLM instances.
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4 font-geo">
+            <h4 className="text-sm font-semibold text-foreground mb-4">
               Product
             </h4>
-            <ul className="space-y-2 font-montserrat">
+            <ul className="space-y-2 font-inter">
               <li>
                 <a
                   href="#features"
@@ -52,10 +50,10 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4 font-geo">
+            <h4 className="text-sm font-semibold text-foreground mb-4">
               Company
             </h4>
-            <ul className="space-y-2 font-montserrat">
+            <ul className="space-y-2 font-inter">
               <li>
                 <a
                   href="/about"
@@ -91,10 +89,10 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4 font-geo">
+            <h4 className="text-sm font-semibold text-foreground mb-4">
               Legal
             </h4>
-            <ul className="space-y-2 font-montserrat">
+            <ul className="space-y-2 font-inter">
               <li>
                 <a
                   href="/privacy"
@@ -123,12 +121,12 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-sm font-montserrat">
+          <p className="text-muted-foreground text-sm font-inter">
             © 2025 EPHMRL.AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a
-              href="https://twitter.com/ephemeralai"
+              href="https://twitter.com/ephmrl.ai"
               className="text-muted-foreground hover:text-primary transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -139,7 +137,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://github.com/ephemeralai"
+              href="https://github.com/ephmrl.ai"
               className="text-muted-foreground hover:text-primary transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -154,7 +152,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://linkedin.com/company/ephemeralai"
+              href="https://linkedin.com/company/ephmrl.ai"
               className="text-muted-foreground hover:text-primary transition-colors"
               target="_blank"
               rel="noopener noreferrer"
