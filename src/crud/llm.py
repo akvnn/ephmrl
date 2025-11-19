@@ -38,6 +38,7 @@ class LLMInstanceCRUD:
                     ListedLLM.deleted_at.is_(None),
                 )
             )
+            .options(selectinload(LLMInstance.llm_subinstances))
         )
         result = await db.execute(stmt)
         row = result.one_or_none()
@@ -95,6 +96,11 @@ class LLMInstanceCRUD:
 
         # All checks passed
         return True
+
+    async def check_maximum_tenants_and_dedicated_constraint(llm_instance: LLMInstance):
+        subinstances_count = len(llm_instance.llm_subinstances)
+        has_dedicated = any(sub.is_dedicated for sub in llm_instance.llm_subinstances)
+        return has_dedicated or subinstances_count >= llm_instance.maximum_tenants
 
 
 class LLMSubinstanceCRUD:
@@ -178,7 +184,11 @@ class LLMSubinstanceCRUD:
             select(LLMSubinstance, LLMInstance, ListedLLM)
             .join(LLMSubinstance.llm_instance)
             .join(LLMInstance.listed_llm)
-            .where(LLMSubinstance.org_id == org_id)
+            .where(
+                and_(
+                    LLMSubinstance.org_id == org_id, LLMSubinstance.deleted_at.is_(None)
+                )
+            )
         )
         result = await db.execute(stmt)
         rows = result.all()

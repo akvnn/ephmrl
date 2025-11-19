@@ -53,13 +53,6 @@ async def create_llm_subinstance(
     listed_llm, llm_instance = await LLMInstanceCRUD.get_llm_from_listed_llm_id(
         db, data.id
     )
-    llm_instance_id = llm_instance.id if llm_instance else None
-
-    # TODO: provision a new LLM is none is available or exceeds max_tenants, but only if the org has quota
-    if not llm_instance_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="LLM is not available"
-        )
 
     if not await LLMInstanceCRUD.can_provision_instance(
         remaining_quota, listed_llm.base_config.get("parameters"), data.is_dedicated
@@ -68,6 +61,20 @@ async def create_llm_subinstance(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot provision instance: quota exceeded",
         )
+
+    llm_instance_id = llm_instance.id if llm_instance else None
+
+    if (
+        llm_instance_id is None
+        or await LLMInstanceCRUD.check_maximum_tenants_and_dedicated_constraint(
+            llm_instance
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="LLM is not available. Please try again later.",
+        )
+        # TODO: provision a new LLM instance
 
     subinstance = await LLMSubinstanceCRUD.create(
         db=db,
