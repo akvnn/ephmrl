@@ -10,7 +10,7 @@ from src.models.relationship import (
 from src.models.plan import Plan
 from src.models.permission import Permission
 from src.models.role import Role
-from src.models.user import User
+from src.models.user import User, UserToken
 from src.models.organization import Organization
 from src.models.transaction import CreditTransaction
 from src.models.project import Project
@@ -29,6 +29,7 @@ __all__ = [
     "Permission",
     "Role",
     "User",
+    "UserToken",
     "Project",
     "LLMSubinstance",
     "LLMInstance",

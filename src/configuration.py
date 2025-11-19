@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     # Polar Configuration
     POLAR_WEBHOOK_SECRET: str | None = None
 
+    # Resend Configuration
+    RESEND_API_KEY: str | None = None
+    FRONTEND_URL: str = "http://localhost:3000"
+
     @field_validator("AUTH0_ALGORITHMS", mode="before")
     @classmethod
     def parse_algorithms(cls, v):

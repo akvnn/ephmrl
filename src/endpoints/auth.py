@@ -1,9 +1,10 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Cookie, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.dependency import get_db, get_settings
 from src.crud import user as crud_user
+from src.models.user import TokenFunctions
 from src.schemas.user import (
     UserCreate,
     UserLogin,
@@ -19,6 +20,11 @@ from src.security import (
 from datetime import timedelta
 from src.configuration import Settings
 from src.utils import clear_auth_cookies, set_auth_cookies
+from src.tasks.email import (
+    send_verification_email,
+    generate_verification_token,
+    store_user_token,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,6 +32,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(
     user_data: UserCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ):
@@ -43,6 +50,9 @@ async def signup(
     # Create user
     user = await crud_user.create_user_with_org_native(db, user_data)
 
+    token = generate_verification_token()
+    await store_user_token(db, user.id, token, TokenFunctions.VERIFY_EMAIL.value)
+
     access_token = create_access_token(
         data={"sub": str(user.id), "email": user.email},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
@@ -57,6 +67,8 @@ async def signup(
     )
 
     set_auth_cookies(resp, access_token, refresh_token)
+
+    background_tasks.add_task(send_verification_email, user.email, token, settings)
 
     return resp
 

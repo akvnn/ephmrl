@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Boolean, DateTime, func, Index
+import enum
+from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, func, Index
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 import uuid
 from src.database import Base
@@ -72,3 +73,24 @@ class User(Base):
         Index("ix_users_email_active", "email", "is_active"),
         Index("ix_users_auth0_ids", "auth0_user_ids", postgresql_using="gin"),
     )
+
+
+class TokenFunctions(str, enum.Enum):
+    VERIFY_EMAIL = "email_verification"
+    RESET_PASSWORD = "reset_password"
+
+
+class UserToken(Base):
+    __tablename__ = "user_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    token = Column(String(64), unique=True, index=True, nullable=False)
+    function = Column(
+        String(64), unique=True, index=True, nullable=False
+    )  # e.g., email_verification, reset_password
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, default=False, nullable=False)

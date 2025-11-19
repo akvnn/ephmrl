@@ -12,12 +12,18 @@ import uuid
 from typing import Optional
 
 
-async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
-    result = await db.execute(
+async def get_user_by_email(
+    db: AsyncSession, email: str, primary_auth_provider_assert: str | None = None
+) -> Optional[User]:
+    stmt = (
         select(User)
         .where(User.email == email.lower())
         .options(defer(User.password_hash))
     )
+    if primary_auth_provider_assert:
+        stmt = stmt.where(User.primary_auth_provider == primary_auth_provider_assert)
+
+    result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
@@ -26,8 +32,12 @@ async def get_user_by_email_no_defer(db: AsyncSession, email: str) -> Optional[U
     return result.scalar_one_or_none()
 
 
-async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
-    result = await db.execute(
+async def get_user_by_id(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    primary_auth_provider_assert: str | None = None,
+) -> Optional[User]:
+    stmt = (
         select(User)
         .where(User.id == user_id)
         .options(
@@ -39,9 +49,14 @@ async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]
                 User.avatar_url,
                 User.is_active,
                 User.email_verified_at,
+                User.password_hash,  # TODO: this is used in change password, check if it has any risk
             )
         )
     )
+    if primary_auth_provider_assert:
+        stmt = stmt.where(User.primary_auth_provider == primary_auth_provider_assert)
+
+    result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
