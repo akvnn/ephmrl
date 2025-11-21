@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { type ReactNode } from "react";
 
 interface FeatureCardProps {
@@ -8,29 +7,18 @@ interface FeatureCardProps {
   index: number;
 }
 
-export function FeatureCard({
-  icon,
-  title,
-  description,
-  index,
-}: FeatureCardProps) {
+export function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="p-8 group"
-    >
+    <div className="p-8 group">
       <div className="mb-6 text-primary/80">{icon}</div>
 
-      <h3 className="text-xl font-semibold text-foreground mb-3 font-montserrat">
+      <h3 className="text-xl font-semibold text-foreground mb-3 font-inter">
         {title}
       </h3>
 
-      <p className="text-muted-foreground/80 leading-relaxed font-montserrat text-sm">
+      <p className="text-muted-foreground/80 leading-relaxed font-inter text-sm">
         {description}
       </p>
-    </motion.div>
+    </div>
   );
 }
