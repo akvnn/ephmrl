@@ -6,6 +6,7 @@ from src.models.organization import Organization, SubscriptionStatus
 from src.models.user import User
 from src.schemas.user import UserCreate, UserCreateFromAuth0
 from src.models.relationship import org_members, user_roles
+from sqlalchemy.orm import selectinload
 from src.security import hash_password, verify_password
 import datetime
 import uuid
@@ -36,6 +37,7 @@ async def get_user_by_id(
     db: AsyncSession,
     user_id: uuid.UUID,
     primary_auth_provider_assert: str | None = None,
+    load_projects: bool = False,
 ) -> Optional[User]:
     stmt = (
         select(User)
@@ -55,13 +57,18 @@ async def get_user_by_id(
     )
     if primary_auth_provider_assert:
         stmt = stmt.where(User.primary_auth_provider == primary_auth_provider_assert)
-
+    if load_projects:
+        stmt = stmt.options(
+            selectinload(User.organizations).selectinload(Organization.projects)
+        )
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
-async def get_user_by_auth0_id(db: AsyncSession, auth0_user_id: str) -> Optional[User]:
-    result = await db.execute(
+async def get_user_by_auth0_id(
+    db: AsyncSession, auth0_user_id: str, load_projects: bool = False
+) -> Optional[User]:
+    stmt = (
         select(User)
         .where(User.auth0_user_ids.contains([auth0_user_id]))
         .options(
@@ -75,6 +82,11 @@ async def get_user_by_auth0_id(db: AsyncSession, auth0_user_id: str) -> Optional
             )
         )
     )
+    if load_projects:
+        stmt = stmt.options(
+            selectinload(User.organizations).selectinload(Organization.projects)
+        )
+    result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 

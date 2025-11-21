@@ -10,7 +10,7 @@ from src.security import (
     verify_password,
 )
 from src.configuration import Settings
-from src.utils import get_current_user_from_cookie
+from src.utils import factory_get_current_user_from_cookie, get_current_user_from_cookie
 from src.tasks.email import (
     send_password_reset_email,
     generate_verification_token,
@@ -20,6 +20,13 @@ from src.tasks.email import (
 )
 
 router = APIRouter(prefix="/user", tags=["user"])
+
+
+@router.get("/info")  # TODO: add response model
+async def user_info(
+    user: User = Depends(factory_get_current_user_from_cookie(load_projects=True)),
+):
+    return user
 
 
 @router.get("/verify")

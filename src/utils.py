@@ -96,8 +96,57 @@ async def get_current_user(
         raise UnauthorizedException(str(e))
 
 
+# Factory function (NOT async) that returns the actual dependency
+def factory_get_current_user_from_cookie(load_projects: bool = False):
+    # The actual dependency function (IS async)
+    async def _get_user(
+        payload: Dict = Depends(auth.verify_from_cookie),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        """
+        Validate JWT token (native RS256 or Auth0) using verify_from_cookie method (Cookie) and return user
+        """
+        try:
+            # Get user ID from token
+            user_id_str: str = payload.get("sub")
+            if not user_id_str:
+                raise UnauthenticatedException
+
+            # For native ephmrl auth, sub is user UUID
+            # For Auth0, sub is auth0 user ID
+            try:
+                user_id = uuid.UUID(user_id_str)
+                user = await crud_user.get_user_by_id(db, user_id, None, load_projects)
+            except ValueError:
+                # Not a UUID, must be Auth0 ID
+                user = await crud_user.get_user_by_auth0_id(
+                    db, user_id_str, load_projects
+                )
+
+            if not user:
+                raise UnauthorizedException
+
+            if not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User account is inactive",
+                )
+
+            return user
+        except UnauthenticatedException:
+            raise
+        except UnauthorizedException:
+            raise
+        except Exception as e:
+            raise UnauthorizedException(str(e))
+
+    return _get_user
+
+
 async def get_current_user_from_cookie(
-    payload: Dict = Depends(auth.verify_from_cookie), db: AsyncSession = Depends(get_db)
+    payload: Dict = Depends(auth.verify_from_cookie),
+    db: AsyncSession = Depends(get_db),
+    load_projects: bool = False,
 ) -> User:
     """
     Validate JWT token (native RS256 or Auth0) using verify_from_cookie method (Cookie) and return user
@@ -113,10 +162,10 @@ async def get_current_user_from_cookie(
         # For Auth0, sub is auth0 user ID
         try:
             user_id = uuid.UUID(user_id_str)
-            user = await crud_user.get_user_by_id(db, user_id)
+            user = await crud_user.get_user_by_id(db, user_id, None, load_projects)
         except ValueError:
             # Not a UUID, must be Auth0 ID
-            user = await crud_user.get_user_by_auth0_id(db, user_id_str)
+            user = await crud_user.get_user_by_auth0_id(db, user_id_str, load_projects)
 
         if not user:
             raise UnauthorizedException
