@@ -12,7 +12,7 @@ from src.endpoints.organization import router as organization_router
 from src.endpoints.project import router as project_router
 from src.endpoints.llm import router as llm_router
 from src.endpoints.listed_llm import router as listed_llm_router
-
+from src.endpoints.admin import router as admin_router
 from src.configuration import Environment, Settings
 
 
@@ -64,6 +64,7 @@ def create_app(settings: Settings = None):
     app.include_router(project_router)
     app.include_router(llm_router)
     app.include_router(listed_llm_router)
+    app.include_router(admin_router)
 
     # app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
     return app
