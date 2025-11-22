@@ -2,7 +2,7 @@ import * as React from "react";
 import { Link } from "@tanstack/react-router";
 
 import { SearchForm } from "@/components/search-form";
-import { VersionSwitcher } from "@/components/version-switcher";
+import { ContextSwitcher } from "@/components/context-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -34,8 +34,8 @@ const data = {
       url: "#",
       items: [
         {
-          title: "Dashboard",
-          url: "/control/dashboard",
+          title: "Analytics",
+          url: "/dashboard/analytics",
           isActive: true,
         },
         {
@@ -54,7 +54,7 @@ const data = {
       items: [
         {
           title: "Deployed Models",
-          url: "#",
+          url: "/dashboard/deployed",
         },
         {
           title: "Model Playground",
@@ -62,7 +62,7 @@ const data = {
         },
         {
           title: "Browse Models",
-          url: "#",
+          url: "/dashboard/models",
         },
         {
           title: "Deploy New",
@@ -139,10 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VersionSwitcher
-          versions={data.versions}
-          defaultVersion={data.versions[0]}
-        />
+        <ContextSwitcher />
         <SearchForm />
       </SidebarHeader>
       <SidebarContent>

@@ -1,4 +1,9 @@
-// Auth types matching backend schemas
+import type { Organization } from "./organization";
+import type { Project } from "./project";
+
+export interface OrganizationWithProjects extends Organization {
+  projects?: Project[];
+}
 
 export interface User {
   id: string;
@@ -12,6 +17,7 @@ export interface User {
   auth_providers: string[];
   password_hash?: string;
   auth0_user_ids: string[];
+  organizations?: OrganizationWithProjects[];
 }
 
 export interface TokenResponse {

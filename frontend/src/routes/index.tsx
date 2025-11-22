@@ -6,11 +6,13 @@ import { Terminal, TypingAnimation } from "@/components/ui/terminal";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { DataStreamCanvas } from "@/components/DataStreamCanvas";
+import { useAuthStore } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
 
   const features = [
     {
@@ -79,6 +81,14 @@ function App() {
     },
   ];
 
+  const handleGetStarted = () => {
+    if (user) {
+      navigate({ to: "/dashboard/analytics" });
+    } else {
+      navigate({ to: "/auth" });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -111,7 +121,7 @@ function App() {
 
               <div className="flex flex-col sm:flex-row items-start gap-4 pt-4">
                 <button
-                  onClick={() => navigate({ to: "/auth/login" })}
+                  onClick={handleGetStarted}
                   className="px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all duration-200 cursor-pointer shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                 >
                   Get Started

@@ -31,7 +31,7 @@ export default function Header() {
               >
                 Pricing
               </a>
-              <ShinyButton onClick={() => navigate({ to: "/auth/signup" })}>
+              <ShinyButton onClick={() => navigate({ to: "/auth" })}>
                 Sign in
               </ShinyButton>
             </div>

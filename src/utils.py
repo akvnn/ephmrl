@@ -47,14 +47,14 @@ def set_auth_cookies(
             secure=is_production,
             samesite="strict",
             max_age=config.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-            path="/api/auth/refresh",  # Only sent to refresh endpoint
+            path="/auth/refresh",  # Only sent to refresh endpoint
         )
 
 
 def clear_auth_cookies(response: Response):
     """Clear authentication cookies on logout"""
     response.delete_cookie(key="access_token", path="/")
-    response.delete_cookie(key="refresh_token", path="/api/auth/refresh")
+    response.delete_cookie(key="refresh_token", path="/auth/refresh")
 
 
 async def get_current_user(

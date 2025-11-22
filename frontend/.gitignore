@@ -3,3 +3,5 @@ dist/
 bun.lock
 .env
 package-lock.json
+.output
+.nitro

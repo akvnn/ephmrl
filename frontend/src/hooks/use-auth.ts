@@ -1,31 +1,32 @@
 import { create } from "zustand";
 import { authService, type SignupData, type LoginData } from "@/lib/auth";
-import type { User } from "@/types/auth";
+import type { User, OrganizationWithProjects } from "@/types/auth";
 import { toast } from "sonner";
+import { useOrganizationStore } from "./use-organization";
+import { useProjectStore } from "./use-project";
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
 
   login: (data: LoginData) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
+  initializeUserContext: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
 
   login: async (data: LoginData) => {
     set({ isLoading: true });
     try {
       await authService.login(data);
-      set({
-        user: { email: data.email } as User,
-        isAuthenticated: true,
-      });
       toast.success("Logged in successfully!");
     } catch (error: any) {
       const message =
@@ -41,13 +42,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       await authService.signup(data);
-      set({
-        user: {
-          email: data.email,
-          full_name: data.full_name,
-        } as User,
-        isAuthenticated: true,
-      });
       toast.success("Account created successfully!");
     } catch (error: any) {
       const message =
@@ -66,13 +60,58 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         isAuthenticated: false,
       });
+
+      useOrganizationStore.getState().clearOrganizations();
+      useProjectStore.getState().clearProjects();
+
       toast.success("Logged out successfully!");
     } catch (error: any) {
       set({
         user: null,
         isAuthenticated: false,
       });
+
+      useOrganizationStore.getState().clearOrganizations();
+      useProjectStore.getState().clearProjects();
+
       toast.error("Logout failed, but you've been logged out locally.");
+    }
+  },
+
+  initializeUserContext: async () => {
+    if (get().isInitialized) {
+      return;
+    }
+
+    set({ isLoading: true });
+    try {
+      const user = await authService.getCurrentUser();
+      set({
+        user,
+        isAuthenticated: true,
+        isInitialized: true,
+        isLoading: false,
+      });
+
+      const organizations = user.organizations || [];
+      useOrganizationStore.getState().setOrganizations(organizations);
+
+      const currentOrganization =
+        useOrganizationStore.getState().currentOrganization;
+
+      if (currentOrganization) {
+        const orgWithProjects = currentOrganization as OrganizationWithProjects;
+        const projects = orgWithProjects.projects || [];
+        useProjectStore.getState().setProjects(projects);
+      }
+    } catch (error: any) {
+      set({
+        user: null,
+        isAuthenticated: false,
+        isInitialized: true,
+        isLoading: false,
+      });
+      console.error("Failed to initialize user context:", error);
     }
   },
 }));

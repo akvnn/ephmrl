@@ -37,3 +37,6 @@ dev-up:
 .PHONY: dev-down
 dev-down:
 	docker compose down
+
+run:
+	uv run -m src.server & (cd frontend && bun run dev) & wait

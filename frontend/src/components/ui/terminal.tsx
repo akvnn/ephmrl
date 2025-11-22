@@ -9,8 +9,8 @@ import {
 } from "react";
 import { motion, MotionProps, useInView } from "motion/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { cn } from "@/lib/utils";
+import dark from "react-syntax-highlighter/dist/esm/styles/prism/dark";
 
 interface SequenceContextValue {
   completeItem: (index: number) => void;

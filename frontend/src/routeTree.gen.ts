@@ -9,17 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ControlRouteImport } from './routes/control'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ControlDashboardRouteImport } from './routes/control/dashboard'
-import { Route as AuthSignupRouteImport } from './routes/auth/signup'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as DashboardModelsRouteImport } from './routes/dashboard/models'
+import { Route as DashboardDeployedRouteImport } from './routes/dashboard/deployed'
+import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard/analytics'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 
-const ControlRoute = ControlRouteImport.update({
-  id: '/control',
-  path: '/control',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -27,20 +28,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ControlDashboardRoute = ControlDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => ControlRoute,
-} as any)
-const AuthSignupRoute = AuthSignupRouteImport.update({
-  id: '/auth/signup',
-  path: '/auth/signup',
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
+const DashboardModelsRoute = DashboardModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDeployedRoute = DashboardDeployedRouteImport.update({
+  id: '/deployed',
+  path: '/deployed',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -55,78 +61,83 @@ const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/control': typeof ControlRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
-  '/control/dashboard': typeof ControlDashboardRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/deployed': typeof DashboardDeployedRoute
+  '/dashboard/models': typeof DashboardModelsRoute
+  '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/control': typeof ControlRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
-  '/control/dashboard': typeof ControlDashboardRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/deployed': typeof DashboardDeployedRoute
+  '/dashboard/models': typeof DashboardModelsRoute
+  '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/control': typeof ControlRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
-  '/control/dashboard': typeof ControlDashboardRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/deployed': typeof DashboardDeployedRoute
+  '/dashboard/models': typeof DashboardModelsRoute
+  '/auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/control'
+    | '/dashboard'
     | '/api/checkout'
     | '/auth/callback'
-    | '/auth/login'
-    | '/auth/signup'
-    | '/control/dashboard'
+    | '/dashboard/analytics'
+    | '/dashboard/deployed'
+    | '/dashboard/models'
+    | '/auth'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/control'
+    | '/dashboard'
     | '/api/checkout'
     | '/auth/callback'
-    | '/auth/login'
-    | '/auth/signup'
-    | '/control/dashboard'
+    | '/dashboard/analytics'
+    | '/dashboard/deployed'
+    | '/dashboard/models'
+    | '/auth'
   id:
     | '__root__'
     | '/'
-    | '/control'
+    | '/dashboard'
     | '/api/checkout'
     | '/auth/callback'
-    | '/auth/login'
-    | '/auth/signup'
-    | '/control/dashboard'
+    | '/dashboard/analytics'
+    | '/dashboard/deployed'
+    | '/dashboard/models'
+    | '/auth/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ControlRoute: typeof ControlRouteWithChildren
+  DashboardRoute: typeof DashboardRouteWithChildren
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthSignupRoute: typeof AuthSignupRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/control': {
-      id: '/control'
-      path: '/control'
-      fullPath: '/control'
-      preLoaderRoute: typeof ControlRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -136,26 +147,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/control/dashboard': {
-      id: '/control/dashboard'
-      path: '/dashboard'
-      fullPath: '/control/dashboard'
-      preLoaderRoute: typeof ControlDashboardRouteImport
-      parentRoute: typeof ControlRoute
-    }
-    '/auth/signup': {
-      id: '/auth/signup'
-      path: '/auth/signup'
-      fullPath: '/auth/signup'
-      preLoaderRoute: typeof AuthSignupRouteImport
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/models': {
+      id: '/dashboard/models'
+      path: '/models'
+      fullPath: '/dashboard/models'
+      preLoaderRoute: typeof DashboardModelsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/deployed': {
+      id: '/dashboard/deployed'
+      path: '/deployed'
+      fullPath: '/dashboard/deployed'
+      preLoaderRoute: typeof DashboardDeployedRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/analytics': {
+      id: '/dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -174,24 +192,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ControlRouteChildren {
-  ControlDashboardRoute: typeof ControlDashboardRoute
+interface DashboardRouteChildren {
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
+  DashboardDeployedRoute: typeof DashboardDeployedRoute
+  DashboardModelsRoute: typeof DashboardModelsRoute
 }
 
-const ControlRouteChildren: ControlRouteChildren = {
-  ControlDashboardRoute: ControlDashboardRoute,
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
+  DashboardDeployedRoute: DashboardDeployedRoute,
+  DashboardModelsRoute: DashboardModelsRoute,
 }
 
-const ControlRouteWithChildren =
-  ControlRoute._addFileChildren(ControlRouteChildren)
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ControlRoute: ControlRouteWithChildren,
+  DashboardRoute: DashboardRouteWithChildren,
   ApiCheckoutRoute: ApiCheckoutRoute,
   AuthCallbackRoute: AuthCallbackRoute,
-  AuthLoginRoute: AuthLoginRoute,
-  AuthSignupRoute: AuthSignupRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
