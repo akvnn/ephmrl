@@ -86,3 +86,4 @@ class Organization(Base):
     )
     llm_subinstances = relationship("LLMSubinstance", back_populates="organization")
     machines = relationship("Machine", back_populates="organization")
+    plugins = relationship("OrganizationPlugin", back_populates="organization")
