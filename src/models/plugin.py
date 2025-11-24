@@ -8,7 +8,6 @@ class Plugin(Base):
     __tablename__ = "plugins"
 
     slug = Column(String(100), primary_key=True)
-    url = Column(String(500), nullable=False)
 
     organization_plugins = relationship("OrganizationPlugin", back_populates="plugin")
 

@@ -64,6 +64,15 @@ export function ContextSwitcher() {
         name: organizationName,
       });
 
+      try {
+        await organizationService.installPlugin(
+          newOrg.id,
+          "document-intelligence"
+        );
+      } catch (pluginError) {
+        console.error("Plugin installation failed:", pluginError);
+      }
+
       setIsCreateOrgDialogOpen(false);
       setOrganizationName("");
       setIsCreateProjectDialogOpen(true);

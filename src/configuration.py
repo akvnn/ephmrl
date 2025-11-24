@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str | None = None
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Plugins Configuration
+    PLUGINS_BASE_URL: str = "http://localhost:8001"
+
     @field_validator("AUTH0_ALGORITHMS", mode="before")
     @classmethod
     def parse_algorithms(cls, v):

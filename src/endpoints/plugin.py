@@ -1,13 +1,22 @@
 from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 import httpx
 from src.crud import plugin as plugin_crud
-from src.dependency import get_db
+from src.dependency import get_db, get_settings
 from src.models.user import User
+from src.models.plugin import OrganizationPlugin
 from src.utils import get_current_user_from_cookie
+from src.configuration import Settings
+from uuid import UUID
 from loguru import logger
 
 router = APIRouter(prefix="/plugins", tags=["plugins"])
+
+
+class InstallPluginRequest(BaseModel):
+    organization_id: str
+    plugin_slug: str
 
 
 @router.api_route(
@@ -21,6 +30,7 @@ async def proxy_to_plugin(
     request: Request,
     user: User = Depends(get_current_user_from_cookie),
     db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ):
     try:
         plugin = await plugin_crud.get_plugin_by_slug(db, plugin_slug)
@@ -37,12 +47,13 @@ async def proxy_to_plugin(
                 detail="organization_id required",
             )
 
-        target_url = f"{plugin.url}/{path}"
+        target_url = f"{settings.PLUGINS_BASE_URL}/{plugin_slug}/{path}"
         if request.url.query:
-            target_url += f"?{request.url.query}"
+            target_url += f"?{request.url.query}&user_id={user.id}"
+        else:
+            target_url += f"?user_id={user.id}"
 
         headers = dict(request.headers)
-        headers["X-User-ID"] = str(user.id)
         headers.pop("host", None)
 
         body = await request.body()
@@ -72,4 +83,37 @@ async def proxy_to_plugin(
         )
     except Exception as e:
         logger.error(f"Unexpected error in plugin proxy: {e}")
+        raise HTTPException(status_code=500, detail="Something went wrong.")
+
+
+@router.post("/install")
+async def install_plugin(
+    request: InstallPluginRequest,
+    user: User = Depends(get_current_user_from_cookie),
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    try:
+        plugin = await plugin_crud.get_plugin_by_slug(db, request.plugin_slug)
+        if not plugin:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Plugin '{request.plugin_slug}' not found",
+            )
+
+        await plugin_crud.install_plugin_for_org(
+            db=db,
+            org_id=UUID(request.organization_id),
+            plugin_slug=request.plugin_slug,
+            plugin_base_url=settings.PLUGINS_BASE_URL,
+        )
+
+        await db.commit()
+
+        return {"status": "success", "message": "Plugin installed successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error installing plugin: {e}")
         raise HTTPException(status_code=500, detail="Something went wrong.")

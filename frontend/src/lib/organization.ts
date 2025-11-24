@@ -38,4 +38,15 @@ export const organizationService = {
     const response = await apiClient.post<Organization>("/organization", data);
     return response.data;
   },
+
+  async installPlugin(
+    organizationId: string,
+    pluginSlug: string
+  ): Promise<{ status: string; message: string }> {
+    const response = await apiClient.post("/plugins/install", {
+      organization_id: organizationId,
+      plugin_slug: pluginSlug,
+    });
+    return response.data;
+  },
 };
