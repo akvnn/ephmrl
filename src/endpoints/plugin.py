@@ -5,7 +5,6 @@ import httpx
 from src.crud import plugin as plugin_crud
 from src.dependency import get_db, get_settings
 from src.models.user import User
-from src.models.plugin import OrganizationPlugin
 from src.utils import get_current_user_from_cookie
 from src.configuration import Settings
 from uuid import UUID
