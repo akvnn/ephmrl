@@ -18,6 +18,7 @@ from src.models.llm import LLMSubinstance, LLMInstance, ListedLLM
 from src.models.gpu import GPU
 from src.models.hosting import HostingContract
 from src.models.machine import Machine
+from src.models.plugin import Plugin, OrganizationPlugin
 
 __all__ = [
     "Base",
@@ -39,4 +40,6 @@ __all__ = [
     "HostingContract",
     "Organization",
     "CreditTransaction",
+    "Plugin",
+    "OrganizationPlugin",
 ]

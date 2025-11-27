@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import { organizationService } from "@/lib/organization";
 import type { Organization } from "@/types/organization";
 import { toast } from "sonner";
+import { usePluginStore } from "./use-plugin";
+import { useProjectStore } from "./use-project";
 
 interface OrganizationStore {
   organizations: Organization[];
@@ -23,7 +25,14 @@ export const useOrganizationStore = create<OrganizationStore>()(
       isLoading: false,
 
       setCurrentOrganization: (organization: Organization | null) => {
+        const currentOrg = get().currentOrganization;
         set({ currentOrganization: organization });
+
+        // Reset plugin and fetch projects when org changes
+        if (currentOrg?.id !== organization?.id && organization) {
+          usePluginStore.getState().clearPlugins();
+          useProjectStore.getState().fetchAndSetProjects(organization.id);
+        }
       },
 
       setOrganizations: (organizations: Organization[]) => {
@@ -88,7 +97,7 @@ export const useOrganizationStore = create<OrganizationStore>()(
     {
       name: "organization-storage",
       partialize: (state) => ({
-        currentOrganizationId: state.currentOrganization?.id || null,
+        currentOrganization: state.currentOrganization,
       }),
     }
   )

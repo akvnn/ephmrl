@@ -15,8 +15,11 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as DashboardModelsRouteImport } from './routes/dashboard/models'
 import { Route as DashboardDeployedRouteImport } from './routes/dashboard/deployed'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard/analytics'
+import { Route as DashboardRagRouteImport } from './routes/dashboard/_rag'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
+import { Route as DashboardRagDocumentsRouteImport } from './routes/dashboard/_rag/documents'
+import { Route as DashboardRagChatRouteImport } from './routes/dashboard/_rag/chat'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -48,6 +51,10 @@ const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardRagRoute = DashboardRagRouteImport.update({
+  id: '/_rag',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -58,26 +65,40 @@ const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
   path: '/api/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRagDocumentsRoute = DashboardRagDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => DashboardRagRoute,
+} as any)
+const DashboardRagChatRoute = DashboardRagChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => DashboardRagRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard': typeof DashboardRagRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/deployed': typeof DashboardDeployedRoute
   '/dashboard/models': typeof DashboardModelsRoute
   '/auth': typeof AuthIndexRoute
+  '/dashboard/chat': typeof DashboardRagChatRoute
+  '/dashboard/documents': typeof DashboardRagDocumentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard': typeof DashboardRagRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/deployed': typeof DashboardDeployedRoute
   '/dashboard/models': typeof DashboardModelsRoute
   '/auth': typeof AuthIndexRoute
+  '/dashboard/chat': typeof DashboardRagChatRoute
+  '/dashboard/documents': typeof DashboardRagDocumentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +106,13 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/_rag': typeof DashboardRagRouteWithChildren
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/deployed': typeof DashboardDeployedRoute
   '/dashboard/models': typeof DashboardModelsRoute
   '/auth/': typeof AuthIndexRoute
+  '/dashboard/_rag/chat': typeof DashboardRagChatRoute
+  '/dashboard/_rag/documents': typeof DashboardRagDocumentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +125,8 @@ export interface FileRouteTypes {
     | '/dashboard/deployed'
     | '/dashboard/models'
     | '/auth'
+    | '/dashboard/chat'
+    | '/dashboard/documents'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,16 +137,21 @@ export interface FileRouteTypes {
     | '/dashboard/deployed'
     | '/dashboard/models'
     | '/auth'
+    | '/dashboard/chat'
+    | '/dashboard/documents'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/api/checkout'
     | '/auth/callback'
+    | '/dashboard/_rag'
     | '/dashboard/analytics'
     | '/dashboard/deployed'
     | '/dashboard/models'
     | '/auth/'
+    | '/dashboard/_rag/chat'
+    | '/dashboard/_rag/documents'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -175,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAnalyticsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/_rag': {
+      id: '/dashboard/_rag'
+      path: ''
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRagRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -189,16 +227,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/_rag/documents': {
+      id: '/dashboard/_rag/documents'
+      path: '/documents'
+      fullPath: '/dashboard/documents'
+      preLoaderRoute: typeof DashboardRagDocumentsRouteImport
+      parentRoute: typeof DashboardRagRoute
+    }
+    '/dashboard/_rag/chat': {
+      id: '/dashboard/_rag/chat'
+      path: '/chat'
+      fullPath: '/dashboard/chat'
+      preLoaderRoute: typeof DashboardRagChatRouteImport
+      parentRoute: typeof DashboardRagRoute
+    }
   }
 }
 
+interface DashboardRagRouteChildren {
+  DashboardRagChatRoute: typeof DashboardRagChatRoute
+  DashboardRagDocumentsRoute: typeof DashboardRagDocumentsRoute
+}
+
+const DashboardRagRouteChildren: DashboardRagRouteChildren = {
+  DashboardRagChatRoute: DashboardRagChatRoute,
+  DashboardRagDocumentsRoute: DashboardRagDocumentsRoute,
+}
+
+const DashboardRagRouteWithChildren = DashboardRagRoute._addFileChildren(
+  DashboardRagRouteChildren,
+)
+
 interface DashboardRouteChildren {
+  DashboardRagRoute: typeof DashboardRagRouteWithChildren
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardDeployedRoute: typeof DashboardDeployedRoute
   DashboardModelsRoute: typeof DashboardModelsRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardRagRoute: DashboardRagRouteWithChildren,
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardDeployedRoute: DashboardDeployedRoute,
   DashboardModelsRoute: DashboardModelsRoute,

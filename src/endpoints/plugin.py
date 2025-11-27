@@ -1,21 +1,38 @@
 from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+
 import httpx
-from src.crud import plugin as plugin_crud
+from src.crud.plugin import PluginCRUD, OrganizationPluginCRUD
 from src.dependency import get_db, get_settings
 from src.models.user import User
 from src.utils import get_current_user_from_cookie
 from src.configuration import Settings
+from src.schemas.plugin import InstallPluginRequest
 from uuid import UUID
 from loguru import logger
 
 router = APIRouter(prefix="/plugins", tags=["plugins"])
 
-
-class InstallPluginRequest(BaseModel):
-    organization_id: str
-    plugin_slug: str
+@router.get("/installed")
+async def get_installed_plugins(
+    organization_id: str,
+    user: User = Depends(get_current_user_from_cookie),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        plugins = await OrganizationPluginCRUD.get_installed(db, UUID(organization_id))
+        return [
+            {
+                "org_id": str(plugin.org_id),
+                "plugin_slug": plugin.plugin_slug,
+                "enabled": True,  
+                "installed_at": "",  
+            }
+            for plugin in plugins
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching installed plugins: {e}")
+        raise HTTPException(status_code=500, detail="Something went wrong.")
 
 
 @router.api_route(
@@ -32,7 +49,7 @@ async def proxy_to_plugin(
     settings: Settings = Depends(get_settings),
 ):
     try:
-        plugin = await plugin_crud.get_plugin_by_slug(db, plugin_slug)
+        plugin = await PluginCRUD.get_by_slug(db, plugin_slug)
         if not plugin:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -93,14 +110,14 @@ async def install_plugin(
     settings: Settings = Depends(get_settings),
 ):
     try:
-        plugin = await plugin_crud.get_plugin_by_slug(db, request.plugin_slug)
+        plugin = await PluginCRUD.get_by_slug(db, request.plugin_slug)
         if not plugin:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Plugin '{request.plugin_slug}' not found",
             )
 
-        await plugin_crud.install_plugin_for_org(
+        await OrganizationPluginCRUD.install(
             db=db,
             org_id=UUID(request.organization_id),
             plugin_slug=request.plugin_slug,

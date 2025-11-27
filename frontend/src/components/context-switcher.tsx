@@ -180,11 +180,7 @@ export function ContextSwitcher() {
               {organizations.map((org) => (
                 <DropdownMenuItem
                   key={org.id}
-                  onSelect={() => {
-                    setCurrentOrganization(org);
-                    // Fetch fresh projects for the selected organization
-                    useProjectStore.getState().fetchAndSetProjects(org.id);
-                  }}
+                  onSelect={() => setCurrentOrganization(org)}
                   className="gap-2"
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
