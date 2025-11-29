@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from uuid import UUID
 import httpx
 from loguru import logger
@@ -8,7 +9,6 @@ from src.models.plugin import Plugin, OrganizationPlugin
 
 
 class PluginCRUD:
-
     @staticmethod
     async def get_by_slug(db: AsyncSession, slug: str) -> Plugin | None:
         """Get a plugin by its slug"""
@@ -28,7 +28,6 @@ class PluginCRUD:
 
 
 class OrganizationPluginCRUD:
-
     @staticmethod
     async def is_installed(
         db: AsyncSession,
@@ -54,6 +53,7 @@ class OrganizationPluginCRUD:
     ) -> list[OrganizationPlugin]:
         query = (
             select(OrganizationPlugin)
+            .options(selectinload(OrganizationPlugin.plugin))
             .where(OrganizationPlugin.org_id == org_id)
             .offset(skip)
             .limit(limit)
@@ -68,7 +68,9 @@ class OrganizationPluginCRUD:
         plugin_slug: str,
     ) -> OrganizationPlugin | None:
         result = await db.execute(
-            select(OrganizationPlugin).where(
+            select(OrganizationPlugin)
+            .options(selectinload(OrganizationPlugin.plugin))
+            .where(
                 and_(
                     OrganizationPlugin.org_id == org_id,
                     OrganizationPlugin.plugin_slug == plugin_slug,
@@ -87,7 +89,7 @@ class OrganizationPluginCRUD:
         org_plugin = OrganizationPlugin(org_id=org_id, plugin_slug=plugin_slug)
         db.add(org_plugin)
         await db.flush()
-
+        await db.refresh(org_plugin)
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 webhook_url = f"{plugin_base_url}/{plugin_slug}/org-provisioned"

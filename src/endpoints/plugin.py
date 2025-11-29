@@ -7,13 +7,15 @@ from src.dependency import get_db, get_settings
 from src.models.user import User
 from src.utils import get_current_user_from_cookie
 from src.configuration import Settings
-from src.schemas.plugin import InstallPluginRequest
+from src.schemas.plugin import InstallPluginRequest, PluginResponse
 from uuid import UUID
 from loguru import logger
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/plugins", tags=["plugins"])
 
-@router.get("/installed")
+
+@router.get("/installed", response_model=list[PluginResponse])
 async def get_installed_plugins(
     organization_id: str,
     user: User = Depends(get_current_user_from_cookie),
@@ -21,15 +23,15 @@ async def get_installed_plugins(
 ):
     try:
         plugins = await OrganizationPluginCRUD.get_installed(db, UUID(organization_id))
-        return [
-            {
-                "org_id": str(plugin.org_id),
-                "plugin_slug": plugin.plugin_slug,
-                "enabled": True,  
-                "installed_at": "",  
-            }
-            for plugin in plugins
+        plugin_responses = [
+            PluginResponse(
+                plugin_slug=org_plugin.plugin_slug,
+                status=org_plugin.status,
+                created_at=org_plugin.created_at,
+            )
+            for org_plugin in plugins
         ]
+        return plugin_responses
     except Exception as e:
         logger.error(f"Error fetching installed plugins: {e}")
         raise HTTPException(status_code=500, detail="Something went wrong.")
@@ -126,7 +128,10 @@ async def install_plugin(
 
         await db.commit()
 
-        return {"status": "success", "message": "Plugin installed successfully"}
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Plugin installed successfully"},
+        )
 
     except HTTPException:
         raise

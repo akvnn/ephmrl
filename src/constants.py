@@ -48,3 +48,16 @@ MODEL_DELETE_ID = UUID("20000000-0000-0000-0000-000000000054")
 
 # Admins
 ADMIN_IDS = [UUID("abadb3fa-021b-4091-9abf-db662db4e54b")]
+
+# Temporary mapping for LLM model names to OLLAMA model identifiers
+OLLAMA_MODEL_MAPPING = {
+    "mistralai/Mistral-7B-Instruct-v0.3": "mistral:7b",
+    "mistralai/Mistral-7B-Instruct-v0.2": "mistral:7b",
+    "mistralai/Mistral-7B-Instruct-v0.1": "mistral:7b",
+    "mistralai/Mistral-7B-v0.1": "mistral:7b",
+    "meta-llama/Llama-4-8B-Instruct": "llama3:8b",
+    "meta-llama/Llama-3-8B-Instruct": "llama3:8b",
+    "meta-llama/Llama-2-7B-chat-hf": "llama2:7b",
+    "meta-llama/Llama-2-13B-chat-hf": "llama2:13b",
+    "Qwen/Qwen2.5-7B-Instruct": "qwen2.5:7b",
+}
