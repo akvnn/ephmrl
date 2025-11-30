@@ -80,6 +80,23 @@ class OrganizationPluginCRUD:
         return result.scalar_one_or_none()
 
     @staticmethod
+    async def install_default_plugins(
+        db: AsyncSession,
+        org_id: UUID,
+        plugin_base_url: str,
+    ) -> None:
+        default_plugins = ["document-intelligence"]
+        for plugin_slug in default_plugins:
+            plugin = await PluginCRUD.get_by_slug(db, plugin_slug)
+            if plugin:
+                await OrganizationPluginCRUD.install(
+                    db,
+                    org_id,
+                    plugin_slug,
+                    plugin_base_url,
+                )
+
+    @staticmethod
     async def install(
         db: AsyncSession,
         org_id: UUID,

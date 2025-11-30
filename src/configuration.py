@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
 
     # Plugins Configuration
-    PLUGINS_BASE_URL: str = "http://localhost:8001"
+    PLUGIN_BASE_URL: str = "http://localhost:8001"
 
     @field_validator("AUTH0_ALGORITHMS", mode="before")
     @classmethod

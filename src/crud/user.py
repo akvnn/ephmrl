@@ -1,7 +1,10 @@
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select
 from sqlalchemy.orm import defer, load_only
 from src.constants import FREE_PLAN_ID, OWNER_ROLE_ID
+from src.crud.plugin import OrganizationPluginCRUD
+from src.configuration import config
 from src.models.organization import Organization, SubscriptionStatus
 from src.models.user import User
 from src.schemas.user import UserCreate, UserCreateFromAuth0
@@ -134,6 +137,13 @@ async def create_organization(
             user_id=creator_user_id, role_id=OWNER_ROLE_ID, org_id=org.id
         )
     )
+    try:
+        await OrganizationPluginCRUD.install_default_plugins(
+            db, org.id, config.PLUGIN_BASE_URL
+        )  # TODO: pass config properly
+    except Exception as e:
+        # catch errors and don't block org creation
+        logger.error(f"Error installing default plugins for org {org.id}: {e}")
     if commit:
         await db.commit()
         await db.refresh(org)
