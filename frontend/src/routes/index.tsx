@@ -7,12 +7,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { DataStreamCanvas } from "@/components/DataStreamCanvas";
 import { useAuthStore } from "@/hooks/use-auth";
+import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
 
   const features = [
     {
@@ -83,7 +85,7 @@ function App() {
 
   const handleGetStarted = () => {
     if (user) {
-      navigate({ to: "/dashboard/analytics" });
+      navigate({ to: "/dashboard/metrics" });
     } else {
       navigate({ to: "/auth" });
     }
@@ -144,7 +146,13 @@ function App() {
                   CPU: 12% | MEM: 402MB | NET: 1.2GB/s
                 </div>
 
-                <DataStreamCanvas className="w-full h-full object-cover opacity-70 mix-blend-screen" />
+                <DataStreamCanvas
+                  className={`w-full h-full object-cover opacity-70 ${
+                    resolvedTheme === "dark"
+                      ? "mix-blend-screen"
+                      : "mix-blend-multiply"
+                  }`}
+                />
 
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                   <div

@@ -8,8 +8,9 @@ import { projectService } from "@/lib/project";
 import { useState, useEffect, useMemo } from "react";
 import { LLMSubinstance } from "@/types/llm";
 import { Project } from "@/types/project";
+import { useThemeStore } from "@/hooks/use-theme";
 
-export const Route = createFileRoute("/dashboard/analytics")({
+export const Route = createFileRoute("/dashboard/metrics")({
   component: DashboardPage,
 });
 
@@ -46,9 +47,35 @@ function formatTimeAgo(date: Date): string {
 
 function DashboardPage() {
   const { currentOrganization } = useOrganizationStore();
+  const { resolvedTheme } = useThemeStore();
+  const isDark = resolvedTheme === "dark";
   const [llmSubinstances, setLlmSubinstances] = useState<LLMSubinstance[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const chartTheme = useMemo(
+    () => ({
+      axis: {
+        ticks: {
+          text: { fill: isDark ? "#94a3b8" : "#64748b" },
+        },
+      },
+      grid: {
+        line: { stroke: isDark ? "#334155" : "#e2e8f0" },
+      },
+      tooltip: {
+        container: {
+          background: isDark ? "#1e293b" : "#ffffff",
+          color: isDark ? "#f1f5f9" : "#1e293b",
+          borderRadius: "8px",
+          boxShadow: isDark
+            ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+            : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        },
+      },
+    }),
+    [isDark]
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,7 +95,7 @@ function DashboardPage() {
         setLlmSubinstances(subinstances);
         setProjects(projectsData);
       } catch (error) {
-        console.error("Failed to fetch analytics data:", error);
+        console.error("Failed to fetch metrics data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -249,16 +276,7 @@ function DashboardPage() {
                   pointBorderColor={{ from: "serieColor" }}
                   enablePointLabel={false}
                   useMesh={true}
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: { fill: "#64748b" },
-                      },
-                    },
-                    grid: {
-                      line: { stroke: "#e2e8f0" },
-                    },
-                  }}
+                  theme={chartTheme}
                   colors={[chartColors.primary]}
                   enableArea={true}
                   areaOpacity={0.1}
@@ -296,17 +314,8 @@ function DashboardPage() {
                   dotBorderColor={{ from: "color" }}
                   colors={[chartColors.primary]}
                   fillOpacity={0.25}
-                  blendMode="multiply"
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: { fill: "#64748b" },
-                      },
-                    },
-                    grid: {
-                      line: { stroke: "#e2e8f0" },
-                    },
-                  }}
+                  blendMode={isDark ? "normal" : "multiply"}
+                  theme={chartTheme}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -352,16 +361,7 @@ function DashboardPage() {
                   pointBorderColor={{ from: "serieColor" }}
                   enablePointLabel={false}
                   useMesh={true}
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: { fill: "#64748b" },
-                      },
-                    },
-                    grid: {
-                      line: { stroke: "#e2e8f0" },
-                    },
-                  }}
+                  theme={chartTheme}
                   colors={[chartColors.chart2]}
                   enableArea={true}
                   areaOpacity={0.1}

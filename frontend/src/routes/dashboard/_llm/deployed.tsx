@@ -8,7 +8,7 @@ import { DeploymentsTable } from "@/components/deployed/DeploymentsTable";
 import { DeploymentsSummary } from "@/components/deployed/DeploymentsSummary";
 import { DeprovisionDialog } from "@/components/deployed/DeprovisionDialog";
 
-export const Route = createFileRoute("/dashboard/deployed")({
+export const Route = createFileRoute("/dashboard/_llm/deployed")({
   component: DeployedModelsPage,
 });
 

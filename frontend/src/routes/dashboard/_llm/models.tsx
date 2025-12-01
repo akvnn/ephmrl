@@ -10,7 +10,7 @@ import { ModelCard } from "@/components/models/ModelCard";
 import { ModelsTable } from "@/components/models/ModelsTable";
 import { DeployDialog } from "@/components/models/DeployDialog";
 
-export const Route = createFileRoute("/dashboard/models")({
+export const Route = createFileRoute("/dashboard/_llm/models")({
   component: ModelsPage,
 });
 

@@ -22,7 +22,7 @@ function AuthPage() {
   const navigate = useNavigate();
 
   const handleSuccess = () => {
-    navigate({ to: "/dashboard/analytics" });
+    navigate({ to: "/dashboard/metrics" });
 
     useAuthStore.getState().initializeUserContext();
   };

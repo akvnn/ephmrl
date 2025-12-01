@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Upload, FileText, Trash2, Loader2 } from "lucide-react";
+
+import { FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import FileUpload from "@/components/kokonutui/file-upload";
 import {
   Card,
   CardContent,
@@ -29,24 +31,15 @@ interface UploadedDocument {
 function DocumentsPage() {
   const { currentOrganization } = useOrganizationStore();
   const { currentProject } = useProjectStore();
-  const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
+  const handleFileUpload = async (file: File) => {
     if (!currentOrganization || !currentProject) {
       toast.error("Please select an organization and project");
       return;
     }
 
-    setUploading(true);
-
     try {
-      const file = files[0];
       const formData = new FormData();
       formData.append("document", file);
       formData.append("project_id", currentProject.id);
@@ -67,9 +60,6 @@ function DocumentsPage() {
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload document");
-    } finally {
-      setUploading(false);
-      event.target.value = "";
     }
   };
 
@@ -125,42 +115,25 @@ function DocumentsPage() {
         <CardHeader>
           <CardTitle>Upload Document</CardTitle>
           <CardDescription>
-            Upload documents to use with AI chat (PDF, DOCX, TXT, MD)
+            Upload PDF documents to use with AI chat
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
-            <input
-              type="file"
-              id="file-upload"
-              className="hidden"
-              onChange={handleFileUpload}
-              accept=".pdf,.docx,.txt,.md"
-              disabled={uploading || !currentProject}
+          {currentProject ? (
+            <FileUpload
+              onUploadSuccess={handleFileUpload}
+              onUploadError={(error) => toast.error(error.message)}
+              acceptedFileTypes={["application/pdf"]}
+              maxFileSize={50 * 1024 * 1024}
+              uploadDelay={0}
+              className="max-w-full"
             />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer flex flex-col items-center space-y-2"
-            >
-              {uploading ? (
-                <Loader2 className="h-12 w-12 text-muted-foreground animate-spin" />
-              ) : (
-                <Upload className="h-12 w-12 text-muted-foreground" />
-              )}
-              <p className="text-sm font-medium">
-                {uploading
-                  ? "Uploading..."
-                  : "Click to upload or drag and drop"}
+          ) : (
+            <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              <p className="text-sm text-destructive">
+                Please select a project first
               </p>
-              <p className="text-xs text-muted-foreground">
-                PDF, DOCX, TXT, MD (max 10MB)
-              </p>
-            </label>
-          </div>
-          {!currentProject && (
-            <p className="text-sm text-destructive mt-2">
-              Please select a project first
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>

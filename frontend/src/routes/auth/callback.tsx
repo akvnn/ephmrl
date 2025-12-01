@@ -40,7 +40,7 @@ function RouteComponent() {
         localStorage.setItem("access_token", response.data.access_token);
         localStorage.setItem("refresh_token", response.data.refresh_token);
 
-        navigate({ to: "/dashboard/analytics" });
+        navigate({ to: "/dashboard/metrics" });
       } catch (err: any) {
         console.error("Callback error:", err);
         setError(

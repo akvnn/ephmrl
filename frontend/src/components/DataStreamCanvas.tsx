@@ -1,9 +1,12 @@
 import { useEffect, useRef } from "react";
+import { useThemeStore } from "@/hooks/use-theme";
 
 interface DataStreamConfig {
   blockSize: number;
   color: string;
   baseColor: string;
+  gridColor: string;
+  scanColor: string;
   speed: number;
   streamCount: number;
 }
@@ -89,11 +92,16 @@ export function DataStreamCanvas({
   const streamsRef = useRef<DataStream[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const dimensionsRef = useRef<CanvasDimensions>({ width: 0, height: 0 });
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+
+  const isDark = resolvedTheme === "dark";
 
   const config: DataStreamConfig = {
     blockSize: 10,
-    color: "#89b18a",
-    baseColor: "#000000",
+    color: isDark ? "#89b18a" : "#2d5a2e",
+    baseColor: isDark ? "#000000" : "#f8faf8",
+    gridColor: isDark ? "#111" : "#e0e8e0",
+    scanColor: isDark ? "rgba(0, 220, 130, 0.1)" : "rgba(0, 180, 100, 0.15)",
     speed: 2,
     streamCount: 15,
     ...customConfig,
@@ -132,7 +140,7 @@ export function DataStreamCanvas({
     ctx.fillStyle = config.baseColor;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = "#111";
+    ctx.strokeStyle = config.gridColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x < width; x += 40) {
@@ -149,7 +157,7 @@ export function DataStreamCanvas({
 
     const time = Date.now() * 0.002;
     const scanY = (Math.sin(time) * 0.5 + 0.5) * height;
-    ctx.fillStyle = `rgba(0, 220, 130, 0.1)`;
+    ctx.fillStyle = config.scanColor;
     ctx.fillRect(0, scanY, width, 2);
 
     animationFrameRef.current = requestAnimationFrame(animate);
@@ -168,7 +176,7 @@ export function DataStreamCanvas({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [resolvedTheme]);
 
   return <canvas ref={canvasRef} className={className} />;
 }

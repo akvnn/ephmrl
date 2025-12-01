@@ -6,6 +6,7 @@ import appCss from "../styles.css?url";
 import { Auth0Provider } from "@auth0/auth0-react";
 import { useEffect } from "react";
 import { useAuthStore } from "@/hooks/use-auth";
+import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -35,6 +36,7 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     useAuthStore.getState().initializeUserContext();
+    useThemeStore.getState().initializeTheme();
   }, []);
 
   return (
@@ -42,7 +44,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="dark">
+      <body>
         <Auth0Provider
           domain={import.meta.env.VITE_AUTH0_DOMAIN}
           clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
