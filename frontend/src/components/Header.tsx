@@ -1,8 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ShinyButton } from "./ui/shiny-button";
+import { useAuthStore } from "@/hooks/use-auth";
 
 export default function Header() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/40">
@@ -31,9 +34,15 @@ export default function Header() {
               >
                 Pricing
               </a>
-              <ShinyButton onClick={() => navigate({ to: "/auth" })}>
-                Sign in
-              </ShinyButton>
+              {user ? (
+                <ShinyButton onClick={() => navigate({ to: "/dashboard/metrics" })}>
+                  Dashboard
+                </ShinyButton>
+              ) : (
+                <ShinyButton onClick={() => navigate({ to: "/auth" })}>
+                  Sign in
+                </ShinyButton>
+              )}
             </div>
           </div>
         </div>
