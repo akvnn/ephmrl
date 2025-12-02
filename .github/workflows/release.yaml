@@ -41,6 +41,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          logout: true
 
       - name: Extract version from release
         id: meta
@@ -139,63 +140,3 @@ jobs:
           branch: helm-chart-update-${{ needs.build-and-push.outputs.version }}
           base: main
           delete-branch: true
-
-  helm-release:
-    needs: build-and-push
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Update Helm Chart values
-        run: |
-          VERSION="${{ needs.build-and-push.outputs.version }}"
-          CHART_PATH="k8s/charts/ephmrl"
-          
-          # Update subchart image tags
-          sed -i "0,/tag: \"\"/{s|tag: \"\".*|tag: \"api-${VERSION}\"|}" ${CHART_PATH}/charts/api/values.yaml
-
-          # Update frontend image tag
-          sed -i "0,/tag: \"\"/{s|tag: \"\".*|tag: \"frontend-${VERSION}\"|}" ${CHART_PATH}/values.yaml
-          
-          # Update subchart versions and appVersions
-          CHART_VERSION="${VERSION#v}"
-          sed -i "s|^version:.*|version: ${CHART_VERSION}|g" ${CHART_PATH}/charts/api/Chart.yaml
-          sed -i "s|^appVersion:.*|appVersion: \"${VERSION}\"|g" ${CHART_PATH}/charts/api/Chart.yaml
-
-          sed -i "/name: api/,/version:/ s|version: \".*\"|version: \"${CHART_VERSION}\"|" ${CHART_PATH}/Chart.yaml
-
-          # Update main chart version and appVersion
-          sed -i "s|^version:.*|version: ${CHART_VERSION}|g" ${CHART_PATH}/Chart.yaml
-          sed -i "s|^appVersion:.*|appVersion: \"${VERSION}\"|g" ${CHART_PATH}/Chart.yaml
-
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.12.0
-          
-      - name: Add Helm repositories
-        run: |
-          helm repo update
-
-      - name: Update Helm dependencies
-        run: |
-          CHART_PATH="k8s/charts/ephmrl"
-          helm dependency update ${CHART_PATH}
-
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_SKIP_EXISTING: true
-        with:
-          charts_dir: k8s/charts
