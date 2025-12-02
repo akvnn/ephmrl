@@ -21,3 +21,6 @@ venv/
 
 # Misc
 *.pem
+
+# Charts
+k8s/charts/*/charts/*.tgz

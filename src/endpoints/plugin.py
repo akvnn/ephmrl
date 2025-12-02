@@ -65,7 +65,7 @@ async def proxy_to_plugin(
                 detail="organization_id required",
             )
 
-        target_url = f"{settings.PLUGINS_BASE_URL}/{plugin_slug}/{path}"
+        target_url = f"{settings.PLUGIN_BASE_URL}/{plugin_slug}/{path}"
         if request.url.query:
             target_url += f"?{request.url.query}&user_id={user.id}"
         else:
@@ -123,7 +123,7 @@ async def install_plugin(
             db=db,
             org_id=UUID(request.organization_id),
             plugin_slug=request.plugin_slug,
-            plugin_base_url=settings.PLUGINS_BASE_URL,
+            plugin_base_url=settings.PLUGIN_BASE_URL,
         )
 
         await db.commit()

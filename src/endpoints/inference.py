@@ -83,7 +83,7 @@ async def inference_websocket(
                 if endpoint:
                     try:
                         plugin_url = (
-                            f"{config.PLUGINS_BASE_URL}/{request.plugin_slug}{endpoint}"
+                            f"{config.PLUGIN_BASE_URL}/{request.plugin_slug}{endpoint}"
                         )
                         payload = {
                             "organization_id": str(org_id),
