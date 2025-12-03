@@ -1,3 +1,4 @@
+import re
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select
@@ -191,8 +192,15 @@ async def create_user_with_org_native(db: AsyncSession, user: UserCreate) -> Use
     db.add(db_user)
     await db.flush()  # Only flush once here
 
-    org_name = f"{db_user.username}'s Organization"
-    org_slug = f"{db_user.username}-{str(db_user.id)[:6]}".lower()
+    name_parts = db_user.full_name.strip().split()
+    display_name = name_parts[0] if len(db_user.full_name) > 20 else db_user.full_name
+
+    org_name = f"{display_name}'s Organization"
+
+    slug_base = re.sub(r"[^\w\s-]", "", display_name)
+    slug_base = re.sub(r"[-\s]+", "-", slug_base).strip("-").lower()
+
+    org_slug = f"{slug_base}-{str(db_user.id)[:6]}"
 
     await create_organization(
         db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False

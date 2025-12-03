@@ -39,6 +39,7 @@ def upgrade() -> None:
         sa.column('model_name', sa.String),
         sa.column('model_type', sa.String),
         sa.column('base_config', JSONB), 
+        sa.column('provider_config', JSONB),
         sa.column('status', sa.String),
         sa.column('maximum_tenants', sa.Integer),
         sa.column('listed_llm_id', UUID(as_uuid=True)),
@@ -56,31 +57,22 @@ def upgrade() -> None:
             'description': 'Meta\'s Llama 4 8B model - efficient and powerful for general tasks',
             'model_name': 'meta-llama/Llama-4-8B-Instruct',
             'slug': 'llama-4-8b',
-            'image_location': 'vllm/vllm-openai:latest',
+            'image_location': 'unavailable',
             'base_config': {
                 'parameters': '8B',
-                'temperature': 0.7,
-                'top_p': 0.9,
-                'max_tokens': 2048,
-                'presence_penalty': 0.0,
-                'frequency_penalty': 0.0
             },
             'status': 'live',
         },
         {
             'id': mistral_id,
-            'name': 'Mistral 7B Instruct',
-            'description': 'Mistral AI\'s 7B instruction-tuned model - fast and accurate',
-            'model_name': 'mistralai/Mistral-7B-Instruct-v0.3',
-            'slug': 'mistral-7b-instruct',
-            'image_location': 'vllm/vllm-openai:latest',
+            'name': 'Mistral Large 3 2512',
+            'description': 'Mistral Large 3 2512 is Mistrals most capable model to date, featuring a sparse mixture-of-experts architecture with 41B active parameters (675B total), and released under the Apache 2.0 license.',
+            'model_name': 'mistralai/mistral-large-2512',
+            'slug': 'mistral-large-2512',
+            'image_location': 'unavailable',
             'base_config': {
-                'parameters': '7B',
-                'temperature': 0.7,
-                'top_p': 0.95,
-                'max_tokens': 4096,
-                'presence_penalty': 0.0,
-                'frequency_penalty': 0.0
+                'parameters': '675B',
+                'active_parameters': '41B'
             },
             'status': 'live',
         },
@@ -100,24 +92,31 @@ def upgrade() -> None:
                 'gpu_memory_utilization': 0.9,
                 'tensor_parallel_size': 1
             },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
+            },
             'status': 'active',
             'maximum_tenants': 10,
             'listed_llm_id': llama4_id,
         },
         {
             'id': uuid4(),
-            'name': 'Mistral 7B - Primary Instance',
-            'model_name': 'mistralai/Mistral-7B-Instruct-v0.3',
+            'name': 'Mistral Large 3 2512 - Primary Instance',
+            'model_name': 'mistralai/mistral-large-2512',
             'model_type': 'chat',
             'base_config': {
+                'total_context': 262144,
+                'max_output': 262144,
                 'temperature': 0.7,
-                'top_p': 0.95,
-                'max_tokens': 4096,
-                'gpu_memory_utilization': 0.85,
-                'tensor_parallel_size': 1
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
             },
             'status': 'active',
-            'maximum_tenants': 15,
+            'maximum_tenants': 100,
             'listed_llm_id': mistral_id,
         },
     ])
@@ -126,5 +125,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # Delete seeded data
-    op.execute("DELETE FROM llm_instances WHERE model_name IN ('meta-llama/Llama-4-8B-Instruct', 'mistralai/Mistral-7B-Instruct-v0.3')")
-    op.execute("DELETE FROM listed_llms WHERE slug IN ('llama-4-8b', 'mistral-7b-instruct')")
+    op.execute("DELETE FROM llm_instances WHERE model_name IN ('meta-llama/Llama-4-8B-Instruct', 'mistralai/mistral-large-2512')")
+    op.execute("DELETE FROM listed_llms WHERE slug IN ('llama-4-8b', 'mistral-large-2512')")
