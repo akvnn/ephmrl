@@ -131,6 +131,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Remove seed data for plans"""
+    op.execute("DELETE FROM organizations")
     op.execute("""
         DELETE FROM plans 
         WHERE id IN (

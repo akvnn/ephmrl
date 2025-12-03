@@ -48,6 +48,7 @@ def upgrade() -> None:
     sa.Column('model_name', sa.String(length=100), nullable=False),
     sa.Column('model_type', sa.String(length=50), nullable=False),
     sa.Column('base_config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('provider_config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('listed_llm_id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -142,7 +143,7 @@ def downgrade() -> None:
     op.drop_table('llm_instance_gpus')
     op.drop_index('ix_gpus_name', table_name='gpus')
     op.drop_table('gpus')
-    op.drop_table('projects')
+    op.execute('DROP TABLE IF EXISTS projects CASCADE')
     op.drop_index('ix_machines_name', table_name='machines')
     op.drop_index('ix_machines_ip_address', table_name='machines')
     op.drop_table('machines')

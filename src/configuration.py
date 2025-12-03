@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     # Plugins Configuration
     PLUGIN_BASE_URL: str = "http://localhost:8001"
 
+    # Inference Configuration
+    OPENAI_API_KEY: str | None = (
+        None  # Any OpenAI compatible API key (e.g., OpenRouter)
+    )
+
     @field_validator("AUTH0_ALGORITHMS", mode="before")
     @classmethod
     def parse_algorithms(cls, v):
