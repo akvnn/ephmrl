@@ -52,6 +52,16 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str | None = None
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # CORS Configuration
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8001"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
+
     # Plugins Configuration
     PLUGIN_BASE_URL: str = "http://localhost:8001"
 

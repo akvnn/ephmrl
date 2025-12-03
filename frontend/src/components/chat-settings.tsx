@@ -205,7 +205,7 @@ export function ChatSettings({
                         <p className="font-medium">{plugin.plugin_slug}</p>
                         <p className="text-xs text-muted-foreground">
                           Installed{" "}
-                          {new Date(plugin.installed_at).toLocaleDateString()}
+                          {new Date(plugin.created_at).toLocaleDateString()}
                         </p>
                       </div>
                       {/*TODO: Fix Switch typing*/}

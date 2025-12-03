@@ -35,7 +35,7 @@ async def inference_websocket(
         org_id = UUID(organization_id)
 
         async for data in websocket.iter_text():
-            data = await websocket.receive_json()
+            data = json.loads(data)
 
             try:
                 request = InferenceRequest(**data)

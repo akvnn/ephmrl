@@ -10,10 +10,10 @@ export interface Plugin {
 }
 
 export interface InstalledPlugin {
-  org_id: string;
   plugin_slug: string;
+  status: string;
+  created_at: string;
   enabled: boolean;
-  installed_at: string;
 }
 
 interface PluginStore {
@@ -49,8 +49,23 @@ export const usePluginStore = create<PluginStore>()(
             `/plugins/installed?organization_id=${organizationId}`
           );
 
+          console.log("Plugins installed: ", response);
+
+          const plugins: InstalledPlugin[] = response.data.map(
+            (p: {
+              plugin_slug: string;
+              status: string;
+              created_at: string;
+            }) => ({
+              plugin_slug: p.plugin_slug,
+              status: p.status,
+              created_at: p.created_at,
+              enabled: p.status === "enabled",
+            })
+          );
+
           set({
-            installedPlugins: response.data,
+            installedPlugins: plugins,
             isLoading: false,
           });
         } catch (error: any) {

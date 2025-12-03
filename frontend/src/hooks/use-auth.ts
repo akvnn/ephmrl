@@ -27,6 +27,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       await authService.login(data);
+      set({ isInitialized: false });
       toast.success("Logged in successfully!");
     } catch (error: any) {
       const message =
@@ -42,6 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       await authService.signup(data);
+      set({ isInitialized: false });
       toast.success("Account created successfully!");
     } catch (error: any) {
       const message =
