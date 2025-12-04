@@ -1,5 +1,4 @@
 import uuid
-import json
 
 import httpx
 from fastapi import APIRouter, Query, WebSocket, Depends
@@ -35,7 +34,6 @@ async def inference_websocket(
         org_id = uuid.UUID(organization_id)
 
         async for data in websocket.iter_json():
-
             try:
                 request = InferenceRequest(**data)
             except Exception as e:

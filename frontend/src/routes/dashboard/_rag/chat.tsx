@@ -207,6 +207,7 @@ function ChatPage() {
       plugin_slug: selectedPlugins.length > 0 ? selectedPlugins[0] : undefined,
       tools: selectedTools.length > 0 ? selectedTools : undefined,
       project_id: currentProject?.id || undefined,
+      plugin_chunks_limit: 3,
       max_tokens: 2000,
       temperature: 0.7,
     };
