@@ -12,6 +12,13 @@ import AI_Prompt, { type AIModel } from "@/components/kokonutui/ai-prompt";
 import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/dashboard/_rag/chat")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    if (!org?.id) return { models: [] };
+    return apiClient
+      .get(`/llm/models/my/all?organization_id=${org.id}`)
+      .then((res) => ({ models: res.data }));
+  },
   component: ChatPage,
 });
 
@@ -26,14 +33,17 @@ function ChatPage() {
   const { currentOrganization } = useOrganizationStore();
   const { currentProject } = useProjectStore();
   const { installedPlugins, fetchAndSetInstalledPlugins } = usePluginStore();
+  const { models: preloadedModels } = Route.useLoaderData();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [models, setModels] = useState<AIModel[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [models, setModels] = useState<AIModel[]>(preloadedModels);
+  const [isLoadingModels, setIsLoadingModels] = useState(
+    preloadedModels.length === 0
+  );
   const [selectedPlugins, setSelectedPlugins] = useState<string[]>([]);
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
 
@@ -194,7 +204,7 @@ function ChatPage() {
 
     const payload = {
       prompt: userMessage.content,
-      plugin_slugs: selectedPlugins.length > 0 ? selectedPlugins : undefined,
+      plugin_slug: selectedPlugins.length > 0 ? selectedPlugins[0] : undefined,
       tools: selectedTools.length > 0 ? selectedTools : undefined,
       project_id: currentProject?.id || undefined,
       max_tokens: 2000,

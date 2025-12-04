@@ -1,12 +1,23 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { Auth0Provider } from "@auth0/auth0-react";
 import { useEffect } from "react";
 import { useAuthStore } from "@/hooks/use-auth";
 import { useThemeStore } from "@/hooks/use-theme";
+import type { Organization } from "@/types/organization";
+import type { Project } from "@/types/project";
 
-export const Route = createRootRoute({
+export interface RouterContext {
+  getOrganization: () => Organization | null;
+  getProject: () => Project | null;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {

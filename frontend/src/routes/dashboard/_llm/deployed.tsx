@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { listLLMSubinstances, deprovisionLLMSubinstance } from "@/lib/llm";
 import type { LLMSubinstance } from "@/types/llm";
 import { useOrganizationStore } from "@/hooks/use-organization";
@@ -9,44 +9,26 @@ import { DeploymentsSummary } from "@/components/deployed/DeploymentsSummary";
 import { DeprovisionDialog } from "@/components/deployed/DeprovisionDialog";
 
 export const Route = createFileRoute("/dashboard/_llm/deployed")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    if (!org?.id) return [];
+    return listLLMSubinstances({ organization_id: org.id });
+  },
   component: DeployedModelsPage,
 });
 
 function DeployedModelsPage() {
   const { currentOrganization } = useOrganizationStore();
-  const [deployments, setDeployments] = useState<LLMSubinstance[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const deployments = Route.useLoaderData();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeployment, setSelectedDeployment] =
     useState<LLMSubinstance | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchDeployments = async () => {
-    if (!currentOrganization?.id) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const data = await listLLMSubinstances({
-        organization_id: currentOrganization.id,
-      });
-      setDeployments(data);
-    } catch (error: any) {
-      const message =
-        error.response?.data?.detail ||
-        "Failed to fetch deployments. Please try again.";
-      toast.error(message);
-      console.error("Failed to fetch deployments:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!currentOrganization?.id) return;
+    return listLLMSubinstances({ organization_id: currentOrganization.id });
   };
-
-  useEffect(() => {
-    fetchDeployments();
-  }, [currentOrganization?.id]);
 
   const handleDeleteClick = (deployment: LLMSubinstance) => {
     setSelectedDeployment(deployment);
@@ -104,11 +86,7 @@ function DeployedModelsPage() {
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-muted-foreground">Loading deployments...</div>
-          </div>
-        ) : deployments.length === 0 ? (
+        {deployments.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
             <div className="text-center">
               <p className="text-muted-foreground">No models deployed yet</p>
@@ -124,7 +102,7 @@ function DeployedModelsPage() {
           />
         )}
 
-        {!isLoading && deployments.length > 0 && (
+        {deployments.length > 0 && (
           <DeploymentsSummary deployments={deployments} />
         )}
       </div>

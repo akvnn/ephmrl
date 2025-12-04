@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,16 @@ import { toast } from "sonner";
 import apiClient from "@/lib/axios";
 
 export const Route = createFileRoute("/dashboard/_rag/documents")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    const project = context.getProject();
+    if (!org?.id || !project?.id) return { documents: [] };
+    return apiClient
+      .get(
+        `/plugins/document-intelligence/recent_documents_info?organization_id=${org.id}&project_id=${project.id}`
+      )
+      .then((res) => ({ documents: res.data.items || [] }));
+  },
   component: DocumentsPage,
 });
 
@@ -31,7 +41,8 @@ interface UploadedDocument {
 function DocumentsPage() {
   const { currentOrganization } = useOrganizationStore();
   const { currentProject } = useProjectStore();
-  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const { documents: initialDocuments } = Route.useLoaderData();
+  const [documents, setDocuments] = useState<UploadedDocument[]>(initialDocuments);
 
   const handleFileUpload = async (file: File) => {
     if (!currentOrganization || !currentProject) {
@@ -93,12 +104,6 @@ function DocumentsPage() {
     }
   };
 
-  useEffect(() => {
-    const loadDocuments = async () => {
-      await fetchDocuments();
-    };
-    loadDocuments();
-  }, [currentOrganization, currentProject]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">

@@ -2,15 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveRadar } from "@nivo/radar";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { useOrganizationStore } from "@/hooks/use-organization";
 import { listLLMSubinstances } from "@/lib/llm";
 import { projectService } from "@/lib/project";
-import { useState, useEffect, useMemo } from "react";
-import { LLMSubinstance } from "@/types/llm";
-import { Project } from "@/types/project";
+import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/dashboard/metrics")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    if (!org?.id) return { llmSubinstances: [], projects: [] };
+    return Promise.all([
+      listLLMSubinstances({ organization_id: org.id }),
+      projectService.fetchProjectsByOrganization(org.id),
+    ]).then(([llmSubinstances, projects]) => ({ llmSubinstances, projects }));
+  },
   component: DashboardPage,
 });
 
@@ -46,12 +51,9 @@ function formatTimeAgo(date: Date): string {
 }
 
 function DashboardPage() {
-  const { currentOrganization } = useOrganizationStore();
+  const { llmSubinstances, projects } = Route.useLoaderData();
   const { resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme === "dark";
-  const [llmSubinstances, setLlmSubinstances] = useState<LLMSubinstance[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const chartTheme = useMemo(
     () => ({
@@ -76,33 +78,6 @@ function DashboardPage() {
     }),
     [isDark]
   );
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!currentOrganization?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const [subinstances, projectsData] = await Promise.all([
-          listLLMSubinstances({
-            organization_id: currentOrganization.id,
-          }),
-          projectService.fetchProjectsByOrganization(currentOrganization.id),
-        ]);
-        setLlmSubinstances(subinstances);
-        setProjects(projectsData);
-      } catch (error) {
-        console.error("Failed to fetch metrics data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentOrganization?.id]);
 
   const deploymentRadarData = useMemo(() => {
     const nameCount = new Map<string, number>();
@@ -222,16 +197,10 @@ function DashboardPage() {
         <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="LLM Deployments"
-            value={isLoading ? "..." : llmSubinstances.length}
+            value={llmSubinstances.length}
           />
-          <StatCard
-            title="Unique Models"
-            value={isLoading ? "..." : uniqueModels}
-          />
-          <StatCard
-            title="Active Projects"
-            value={isLoading ? "..." : projects.length}
-          />
+          <StatCard title="Unique Models" value={uniqueModels} />
+          <StatCard title="Active Projects" value={projects.length} />
           <StatCard
             title="Documents"
             value="Coming Soon"
@@ -245,43 +214,37 @@ function DashboardPage() {
               Model Provisioning (Last 7 Days)
             </h3>
             <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                <ResponsiveLine
-                  data={provisioningActivityData}
-                  margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: 0,
-                    max: "auto",
-                  }}
-                  curve="monotoneX"
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  pointSize={8}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  enablePointLabel={false}
-                  useMesh={true}
-                  theme={chartTheme}
-                  colors={[chartColors.primary]}
-                  enableArea={true}
-                  areaOpacity={0.1}
-                />
-              )}
+              <ResponsiveLine
+                data={provisioningActivityData}
+                margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                xScale={{ type: "point" }}
+                yScale={{
+                  type: "linear",
+                  min: 0,
+                  max: "auto",
+                }}
+                curve="monotoneX"
+                axisBottom={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                pointSize={8}
+                pointColor={{ theme: "background" }}
+                pointBorderWidth={2}
+                pointBorderColor={{ from: "serieColor" }}
+                enablePointLabel={false}
+                useMesh={true}
+                theme={chartTheme}
+                colors={[chartColors.primary]}
+                enableArea={true}
+                areaOpacity={0.1}
+              />
             </div>
           </div>
 
@@ -290,11 +253,7 @@ function DashboardPage() {
               Top Deployments by Name
             </h3>
             <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : deploymentRadarData.length > 0 ? (
+              {deploymentRadarData.length > 0 ? (
                 <ResponsiveRadar
                   data={deploymentRadarData}
                   keys={["count"]}
@@ -330,13 +289,8 @@ function DashboardPage() {
               Projects Created (Last 7 Days)
             </h3>
             <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                <ResponsiveLine
-                  data={projectActivityData}
+              <ResponsiveLine
+                data={projectActivityData}
                   margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
                   xScale={{ type: "point" }}
                   yScale={{
@@ -365,8 +319,7 @@ function DashboardPage() {
                   colors={[chartColors.chart2]}
                   enableArea={true}
                   areaOpacity={0.1}
-                />
-              )}
+              />
             </div>
           </div>
         </div>
@@ -374,11 +327,7 @@ function DashboardPage() {
         <div className="mt-6 rounded-lg border p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
           <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">
-                Loading activity...
-              </div>
-            ) : recentActivity.length > 0 ? (
+            {recentActivity.length > 0 ? (
               recentActivity.map((activity, idx) => (
                 <div key={idx} className="flex items-center gap-3 text-sm">
                   <span className="text-muted-foreground">
