@@ -103,10 +103,6 @@ class OrganizationPluginCRUD:
         plugin_slug: str,
         plugin_base_url: str,
     ) -> OrganizationPlugin:
-        org_plugin = OrganizationPlugin(org_id=org_id, plugin_slug=plugin_slug)
-        db.add(org_plugin)
-        await db.flush()
-        await db.refresh(org_plugin)
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 webhook_url = f"{plugin_base_url}/{plugin_slug}/org-provisioned"
@@ -116,7 +112,15 @@ class OrganizationPluginCRUD:
         except httpx.HTTPError as e:
             logger.error(f"Plugin provisioning webhook failed for {plugin_slug}: {e}")
             raise
-
+        except Exception as e:
+            logger.error(
+                f"Unexpected error during plugin provisioning for {plugin_slug}: {e}"
+            )
+            raise
+        org_plugin = OrganizationPlugin(org_id=org_id, plugin_slug=plugin_slug)
+        db.add(org_plugin)
+        await db.flush()
+        await db.refresh(org_plugin)
         return org_plugin
 
     @staticmethod
