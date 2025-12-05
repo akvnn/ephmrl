@@ -1,5 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Cpu, Shield, Zap, Globe, Code, Database } from "lucide-react";
+import {
+  Cpu,
+  Shield,
+  Zap,
+  Globe,
+  Code,
+  Database,
+  Rocket,
+  Building2,
+} from "lucide-react";
 import { FeatureCard } from "../components/landing/FeatureCard";
 import { PricingCard } from "../components/landing/PricingCard";
 import { Terminal, TypingAnimation } from "@/components/ui/terminal";
@@ -57,29 +66,32 @@ function App() {
 
   const pricingTiers = [
     {
-      name: "Basic",
+      name: "Starter",
       price: "Free",
-      features: ["Playground access", "Try before you buy"],
-    },
-    {
-      name: "Pay as You Use",
-      price: "Flexible",
-      features: ["Credit system", "No commitments", "Scale as needed"],
-    },
-    {
-      name: "Business",
-      price: "Starting at $99/mo",
+      tagline: "Perfect for exploring and testing the platform capabilities.",
       features: [
-        "Up to 300B models",
-        "Up to 4 models at once",
-        "50 requests/second",
-        "Up to 4 team members",
+        "Full playground access",
+        "Test any open-source model",
+        "Community support",
+        "Public documentation",
       ],
+      cta: "Start Free",
+      icon: <Rocket className="w-5 h-5" />,
     },
     {
       name: "Enterprise",
       price: "Custom",
-      features: ["Custom pricing", "Unlimited scale", "Dedicated support"],
+      tagline:
+        "Tailored solutions for organizations with specific requirements.",
+      features: [
+        "Dedicated LLM instances",
+        "Custom integrations & SLAs",
+        "24/7 priority support",
+        "Volume-based pricing",
+      ],
+      cta: "Contact Sales",
+      featured: true,
+      icon: <Building2 className="w-5 h-5" />,
     },
   ];
 
@@ -115,7 +127,7 @@ function App() {
                 </h1>
 
                 <p className="text-xl text-muted-foreground leading-relaxed font-inter max-w-xl">
-                  The first platform designed for organizations to rent
+                  Privacy-first platform designed for organizations to rent
                   dedicated LLM instances. No complex setup. No shared
                   resources. Just powerful AI at your fingertips.
                 </p>
@@ -320,66 +332,106 @@ function App() {
         </div>
       </section>
 
-      <section id="pricing" className="relative py-32 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-20 space-y-4">
+      <section id="pricing" className="relative py-32 px-6 max-w-5xl mx-auto">
+        <div className="text-center mb-16 space-y-4">
           <h2 className="text-5xl font-bold text-foreground tracking-tight">
-            Flexible Pricing
+            Simple Pricing
           </h2>
           <p className="text-muted-foreground text-center text-lg max-w-2xl mx-auto font-inter">
-            Pay as you go with our credit system or choose a plan that fits your
-            organization's needs.
+            Start free and scale when you're ready. No hidden fees, no
+            surprises.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {pricingTiers.map((tier, index) => (
             <PricingCard
               key={index}
               name={tier.name}
               price={tier.price}
+              tagline={tier.tagline}
               features={tier.features}
               index={index}
-              featured={tier.name === "Business"}
+              featured={tier.featured}
+              cta={tier.cta}
+              icon={tier.icon}
+              onCtaClick={
+                tier.featured
+                  ? () => {
+                      navigate({ to: "/contact" });
+                    }
+                  : handleGetStarted
+              }
             />
           ))}
         </div>
       </section>
 
-      <section className="relative py-32 px-6 max-w-6xl mx-auto text-center">
-        <div className="relative bg-linear-to-br from-primary/5 via-background to-primary/10 border border-primary/20 rounded-3xl p-16 overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-linear-to-tr from-primary/10 via-transparent to-transparent opacity-50"></div>
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          ></div>
+      <section className="relative py-32 px-6">
+        <div className="relative max-w-4xl mx-auto">
+          <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-background/80 backdrop-blur-xl">
+            <div className="absolute inset-0 rounded-3xl bg-linear-to-b from-primary/20 via-transparent to-primary/10 opacity-50 pointer-events-none" />
 
-          <div className="relative space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                Ready to regain control?
-              </h2>
-              <p className="text-muted-foreground text-xl font-inter max-w-2xl mx-auto leading-relaxed">
-                Stop sending your proprietary data to public APIs. Switch to
-                dedicated, private infrastructure today.
-              </p>
-            </div>
+            <div
+              className="absolute inset-0 opacity-[0.02] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)",
+                backgroundSize: "32px 32px",
+              }}
+            />
 
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
-              <button
-                onClick={() =>
-                  (window.location.href =
-                    "/api/checkout?products=e2d99c7c-62ef-415f-9c87-2675294b8ea8")
-                }
-                className="px-10 py-5 bg-primary text-primary-foreground font-bold text-lg rounded-xl hover:bg-primary/90 transition-all duration-200 cursor-pointer shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40"
-              >
-                Create Account
-              </button>
-              <button className="px-10 py-5 bg-background/80 border-2 border-border text-foreground font-bold text-lg rounded-xl hover:bg-muted/50 hover:border-muted-foreground/30 transition-all duration-200 cursor-pointer backdrop-blur-sm">
-                Contact Sales
-              </button>
+            <div className="relative px-8 py-16 sm:px-16 sm:py-20">
+              <div className="text-center space-y-6">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1]">
+                  Ready to take back
+                  <span className="block mt-2 bg-linear-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+                    control of your data?
+                  </span>
+                </h2>
+
+                <p className="text-muted-foreground text-lg sm:text-xl font-inter max-w-xl mx-auto leading-relaxed">
+                  Join companies using dedicated, private AI infrastructure. No
+                  shared resources. No data leaks.
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-6">
+                  <button
+                    onClick={() =>
+                      (window.location.href =
+                        "/api/checkout?products=e2d99c7c-62ef-415f-9c87-2675294b8ea8")
+                    }
+                    className="group relative px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-xl transition-all duration-300 cursor-pointer shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 overflow-hidden"
+                  >
+                    <span className="relative z-10 flex items-center gap-2">
+                      Create Account
+                      <svg
+                        className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </span>
+                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  </button>
+                  <button
+                    onClick={() => navigate({ to: "/contact" })}
+                    className="px-8 py-4 text-foreground font-semibold rounded-xl border border-border hover:bg-muted/50 hover:border-muted-foreground/30 transition-all duration-200 cursor-pointer"
+                  >
+                    Contact Us
+                  </button>
+                </div>
+
+                <p className="text-muted-foreground/60 text-sm pt-4">
+                  Free tier available.
+                </p>
+              </div>
             </div>
           </div>
         </div>
