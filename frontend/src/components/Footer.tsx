@@ -1,10 +1,12 @@
+import { Logo } from "@/components/Logo";
+
 export default function Footer() {
   return (
     <footer className="relative border-t border-border/40 bg-background/50 backdrop-blur-sm mt-20">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-lg font-bold text-primary mb-4">Ephmrl</h3>
+            <Logo variant="full" size="sm" className="mb-4" />
             <p className="text-muted-foreground text-sm font-inter">
               The first platform designed for organizations to rent dedicated
               LLM instances.

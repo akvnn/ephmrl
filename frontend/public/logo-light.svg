@@ -1,0 +1,12 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Light mode: white background with subtle border -->
+    <rect width="100" height="100" rx="20" fill="oklch(0.98 0.01 150)" stroke="oklch(0.88 0.03 150)" stroke-width="2" />
+
+    <!-- Centered Mark using light mode primary color -->
+    <g transform="translate(26, 20)">
+        <rect x="0" y="0" width="12" height="60" rx="2" fill="oklch(0.45 0.15 155)" />
+        <rect x="18" y="10" width="12" height="40" rx="2" fill="oklch(0.45 0.15 155)" opacity="0.8" />
+        <rect x="36" y="20" width="12" height="20" rx="2" fill="oklch(0.45 0.15 155)" opacity="0.6" />
+        <circle cx="60" cy="30" r="3" fill="oklch(0.45 0.15 155)" opacity="0.4" />
+    </g>
+</svg>

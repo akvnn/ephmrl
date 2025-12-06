@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Logo } from "@/components/Logo";
 
 export default function Header() {
   return (
@@ -6,9 +6,7 @@ export default function Header() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/40">
         <div className="max-w-360 mx-auto py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-primary">
-              Ephmrl
-            </Link>
+            <Logo variant="full" size="sm" linkTo="/" />
 
             <div className="hidden md:flex items-center gap-8">
               <a

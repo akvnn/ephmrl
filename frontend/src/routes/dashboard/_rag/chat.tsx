@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Bot, User, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrganizationStore } from "@/hooks/use-organization";
 import { useProjectStore } from "@/hooks/use-project";
 import { usePluginStore } from "@/hooks/use-plugin";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import apiClient from "@/lib/axios";
 import AI_Prompt, { type AIModel } from "@/components/kokonutui/ai-prompt";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const Route = createFileRoute("/dashboard/_rag/chat")({
   loader: ({ context }) => {
@@ -46,10 +46,13 @@ function ChatPage() {
   );
   const [selectedPlugins, setSelectedPlugins] = useState<string[]>([]);
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [chunkLimit, setChunkLimit] = useState(3);
 
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentMessageRef = useRef<string>("");
+  const isNearBottomRef = useRef(true);
 
   const fetchModelsAndConnect = useCallback(async () => {
     if (!currentOrganization) return;
@@ -90,8 +93,17 @@ function ChatPage() {
     };
   }, [currentOrganization?.id]);
 
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 100;
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < threshold;
+  }, []);
+
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && isNearBottomRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
@@ -125,23 +137,27 @@ function ChatPage() {
 
         if (data.type === "token") {
           currentMessageRef.current += data.content;
+          const currentContent = currentMessageRef.current;
 
           setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
+            const lastMessage = prev[prev.length - 1];
 
             if (lastMessage && lastMessage.role === "assistant") {
-              lastMessage.content = currentMessageRef.current;
+              return [
+                ...prev.slice(0, -1),
+                { ...lastMessage, content: currentContent },
+              ];
             } else {
-              newMessages.push({
-                id: Date.now().toString(),
-                role: "assistant",
-                content: currentMessageRef.current,
-                timestamp: new Date(),
-              });
+              return [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  role: "assistant",
+                  content: currentContent,
+                  timestamp: new Date(),
+                },
+              ];
             }
-
-            return newMessages;
           });
         } else if (data.type === "done") {
           console.log("Stream complete");
@@ -207,7 +223,7 @@ function ChatPage() {
       plugin_slug: selectedPlugins.length > 0 ? selectedPlugins[0] : undefined,
       tools: selectedTools.length > 0 ? selectedTools : undefined,
       project_id: currentProject?.id || undefined,
-      plugin_chunks_limit: 3,
+      plugin_chunks_limit: chunkLimit,
       max_tokens: 2000,
       temperature: 0.7,
     };
@@ -224,7 +240,11 @@ function ChatPage() {
         </p>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 p-4 overflow-y-auto"
+      >
         <div className="space-y-4 max-w-3xl mx-auto">
           {messages.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
@@ -244,7 +264,7 @@ function ChatPage() {
               }`}
             >
               <Card
-                className={`max-w-[80%] p-4 ${
+                className={`max-w-[80%] p-4 overflow-x-auto ${
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -259,9 +279,11 @@ function ChatPage() {
                   )}
                   <div className="flex-1">
                     {message.role === "assistant" ? (
-                      <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0">
-                        {message.content}
-                      </ReactMarkdown>
+                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
                     ) : (
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     )}
@@ -285,7 +307,7 @@ function ChatPage() {
 
           <div ref={scrollRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t p-4">
         <div className="max-w-3xl mx-auto">
@@ -300,10 +322,12 @@ function ChatPage() {
             selectedModelId={selectedModelId}
             onModelChange={handleModelChange}
             plugins={installedPlugins}
-            selectedPlugins={selectedPlugins}
+            selectedPlugins={installedPlugins.map((p) => p.plugin_slug)}
             onPluginChange={setSelectedPlugins}
             selectedTools={selectedTools}
             onToolChange={setSelectedTools}
+            chunkLimit={chunkLimit}
+            onChunkLimitChange={setChunkLimit}
             isConnected={isConnected}
             isStreaming={isStreaming}
             isLoadingModels={isLoadingModels}

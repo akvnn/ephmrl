@@ -3,6 +3,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useThemeStore } from "@/hooks/use-theme";
 import { Settings, Sun, Moon, LogOut, ChevronDown } from "lucide-react";
 
+import { Logo } from "@/components/Logo";
 import { SearchForm } from "@/components/search-form";
 import { ContextSwitcher } from "@/components/context-switcher";
 import {
@@ -73,6 +74,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
+        <div className="px-2 py-1">
+          <Logo variant="full" size="sm" linkTo="/dashboard" />
+        </div>
         <ContextSwitcher />
         <SearchForm />
       </SidebarHeader>

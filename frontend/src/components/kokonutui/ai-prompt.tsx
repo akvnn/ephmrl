@@ -12,6 +12,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,8 @@ export interface AIPromptProps {
   onPluginChange?: (pluginSlugs: string[]) => void;
   selectedTools?: string[];
   onToolChange?: (tools: string[]) => void;
+  chunkLimit?: number;
+  onChunkLimitChange?: (limit: number) => void;
   disabled?: boolean;
   isStreaming?: boolean;
   isConnected?: boolean;
@@ -68,6 +71,8 @@ export default function AI_Prompt({
   onPluginChange = () => {},
   selectedTools = [],
   onToolChange = () => {},
+  chunkLimit = 3,
+  onChunkLimitChange = () => {},
   disabled = false,
   isStreaming = false,
   isConnected = false,
@@ -84,6 +89,7 @@ export default function AI_Prompt({
 
   const selectedModel = models.find((m) => m.id === selectedModelId);
   const enabledPlugins = plugins.filter((p) => p.enabled);
+  const isPluginSettingsEnabled = plugins.length > 0;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -284,12 +290,22 @@ export default function AI_Prompt({
                 {/* Plugin Settings Icon */}
                 <div className="relative" ref={pluginPanelRef}>
                   <Button
-                    onClick={() => setShowPluginSettings(!showPluginSettings)}
+                    onClick={() =>
+                      isPluginSettingsEnabled &&
+                      setShowPluginSettings(!showPluginSettings)
+                    }
+                    disabled={!isPluginSettingsEnabled}
+                    title={
+                      !isPluginSettingsEnabled
+                        ? "Install the 'ultrathink' plugin to enable plugin settings"
+                        : undefined
+                    }
                     className={cn(
                       "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
                       "bg-background hover:bg-muted/60 border border-border/60",
                       "transition-all duration-150 hover:border-border/80",
                       "focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "disabled:opacity-50 disabled:cursor-not-allowed",
                       showPluginSettings && "border-accent/40 bg-accent/5",
                       selectedPlugins.length > 0 &&
                         "border-accent/40 bg-accent/5"
@@ -299,9 +315,11 @@ export default function AI_Prompt({
                     <Settings2
                       className={cn(
                         "h-4 w-4 transition-colors duration-150",
-                        selectedPlugins.length > 0
-                          ? "text-primary dark:text-accent"
-                          : "text-muted-foreground"
+                        !isPluginSettingsEnabled
+                          ? "text-muted-foreground/40"
+                          : selectedPlugins.length > 0
+                            ? "text-primary dark:text-accent"
+                            : "text-muted-foreground"
                       )}
                     />
                   </Button>
@@ -376,6 +394,27 @@ export default function AI_Prompt({
                               </button>
                             ))
                           )}
+                        </div>
+
+                        <div className="p-3 border-t border-border/40">
+                          <div className="flex items-center justify-between gap-3">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Chunk Limit
+                            </label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={chunkLimit}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val) && val >= 1 && val <= 20) {
+                                  onChunkLimitChange(val);
+                                }
+                              }}
+                              className="w-20 h-7 text-xs text-center"
+                            />
+                          </div>
                         </div>
                       </motion.div>
                     )}

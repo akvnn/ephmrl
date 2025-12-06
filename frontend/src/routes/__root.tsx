@@ -28,13 +28,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Ephmrl",
+        title: "ephmrl",
+      },
+      {
+        name: "description",
+        content: "The first platform designed for organizations to rent dedicated LLM instances.",
       },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href: "/favicon.svg",
       },
     ],
   }),
