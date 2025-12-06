@@ -15,6 +15,7 @@ from src.endpoints.listed_llm import router as listed_llm_router
 from src.endpoints.admin import router as admin_router
 from src.endpoints.plugin import router as plugin_router
 from src.endpoints.inference import router as inference_router
+from src.endpoints.form import router as form_router
 from src.configuration import Environment, Settings
 
 
@@ -69,6 +70,7 @@ def create_app(settings: Settings = None):
     app.include_router(admin_router)
     app.include_router(plugin_router)
     app.include_router(inference_router)
+    app.include_router(form_router)
 
     # app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET)
     return app

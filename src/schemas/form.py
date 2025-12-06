@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
 
 class FormBase(BaseModel):
-    fist_name: str = Field(..., min_length=1, max_length=20)
+    first_name: str = Field(..., min_length=1, max_length=20)
     last_name: str = Field(..., min_length=1, max_length=20)
-    email: str = Field(..., max_length=255)
+    email: EmailStr = Field(..., max_length=255)
     company_name: str | None = Field(None, max_length=100)
     message: str = Field(..., max_length=1000)
+
+    model_config = ConfigDict(from_attributes=True)

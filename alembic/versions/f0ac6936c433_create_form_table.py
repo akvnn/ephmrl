@@ -1,8 +1,8 @@
-"""create table to store form data
+"""create form table
 
-Revision ID: 850f1eeee1a5
+Revision ID: f0ac6936c433
 Revises: 70a8402a4332
-Create Date: 2025-12-06 01:44:13.627823
+Create Date: 2025-12-06 12:17:24.399016
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '850f1eeee1a5'
+revision: str = 'f0ac6936c433'
 down_revision: Union[str, Sequence[str], None] = '70a8402a4332'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,10 @@ def upgrade() -> None:
     sa.Column('last_name', sa.String(length=20), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('company_name', sa.String(length=100), nullable=True),
-    sa.Column('message', sa.String(length=1000), nullable=True),
+    sa.Column('message', sa.String(length=1000), nullable=False),
+    sa.Column('status', sa.String(length=50), nullable=True),
+    sa.Column('notes', sa.String(length=1000), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_forms_email'), 'forms', ['email'], unique=True)
