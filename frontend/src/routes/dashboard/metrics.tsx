@@ -192,9 +192,9 @@ function DashboardPage() {
   }, [llmSubinstances, projects]);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="px-4 pb-4">
-        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-4">
+      <div className="px-0 sm:px-4 pb-4">
+        <div className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="LLM Deployments"
             value={llmSubinstances.length}
@@ -208,12 +208,12 @@ function DashboardPage() {
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Model Provisioning (Last 7 Days)
             </h3>
-            <div className="h-[300px]">
+            <div className="h-[250px] sm:h-[300px]">
               <ResponsiveLine
                 data={provisioningActivityData}
                 margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
@@ -248,18 +248,18 @@ function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Top Deployments by Name
             </h3>
-            <div className="h-[300px]">
+            <div className="h-[250px] sm:h-[300px]">
               {deploymentRadarData.length > 0 ? (
                 <ResponsiveRadar
                   data={deploymentRadarData}
                   keys={["count"]}
                   indexBy="deployment"
                   maxValue="auto"
-                  margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
+                  margin={{ top: 30, right: 50, bottom: 30, left: 50 }}
                   curve="linearClosed"
                   borderWidth={2}
                   borderColor={{ from: "color" }}
@@ -284,11 +284,11 @@ function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Projects Created (Last 7 Days)
             </h3>
-            <div className="h-[300px]">
+            <div className="h-[250px] sm:h-[300px]">
               <ResponsiveLine
                 data={projectActivityData}
                   margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
@@ -324,20 +324,20 @@ function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
-          <div className="space-y-3">
+        <div className="mt-4 sm:mt-6 rounded-lg border p-4 sm:p-6 shadow-sm">
+          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Recent Activity</h3>
+          <div className="space-y-2 sm:space-y-3">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-sm">
-                  <span className="text-muted-foreground">
+                <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm">
+                  <span className="text-muted-foreground whitespace-nowrap">
                     {activity.timeAgo}
                   </span>
-                  <span>{activity.description}</span>
+                  <span className="break-words">{activity.description}</span>
                 </div>
               ))
             ) : (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 No recent activity
               </div>
             )}

@@ -25,7 +25,8 @@ export const Route = createFileRoute("/dashboard/_rag/documents")({
       .get(
         `/plugins/document-intelligence/recent_documents_info?organization_id=${org.id}&project_id=${project.id}`
       )
-      .then((res) => ({ documents: res.data.items || [] }));
+      .then((res) => ({ documents: res.data.items || [] }))
+      .catch(() => ({ documents: [] }));
   },
   component: DocumentsPage,
 });

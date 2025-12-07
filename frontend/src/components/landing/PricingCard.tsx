@@ -27,13 +27,13 @@ export function PricingCard({
 }: PricingCardProps) {
   return (
     <div
-      className={`group relative flex flex-col h-full w-full max-w-sm rounded-3xl p-1 transition-all duration-500 ${
+      className={`group relative flex flex-col h-full w-full rounded-2xl sm:rounded-3xl p-1 transition-all duration-500 ${
         featured
           ? "bg-linear-to-b from-primary via-primary/60 to-primary/20"
           : "bg-linear-to-b from-border/80 to-border/20"
       }`}
     >
-      <div className="relative flex flex-col h-full bg-background rounded-[calc(1.5rem-4px)] p-8">
+      <div className="relative flex flex-col h-full bg-background rounded-[calc(1rem-4px)] sm:rounded-[calc(1.5rem-4px)] p-5 sm:p-6 lg:p-8">
         {featured && (
           <div className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2">
             <span className="inline-flex items-center px-4 py-1 text-xs font-semibold tracking-wide uppercase bg-primary text-primary-foreground rounded-full shadow-md">
@@ -42,23 +42,23 @@ export function PricingCard({
           </div>
         )}
 
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             {icon && (
               <div
-                className={`p-2 rounded-lg ${featured ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                className={`p-1.5 sm:p-2 rounded-lg ${featured ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
               >
                 {icon}
               </div>
             )}
-            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground tracking-tight">
               {name}
             </h3>
           </div>
 
           <div className="flex items-baseline gap-1.5">
             <span
-              className={`text-5xl font-bold tracking-tight ${featured ? "text-primary" : "text-foreground"}`}
+              className={`text-4xl sm:text-5xl font-bold tracking-tight ${featured ? "text-primary" : "text-foreground"}`}
             >
               {price}
             </span>
@@ -70,13 +70,13 @@ export function PricingCard({
           </div>
 
           {tagline && (
-            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            <p className="mt-2 sm:mt-3 text-sm text-muted-foreground leading-relaxed">
               {tagline}
             </p>
           )}
         </div>
 
-        <div className="flex-1 mb-8">
+        <div className="flex-1 mb-6 sm:mb-8">
           <div className="h-px bg-border mb-6" />
           <ul className="space-y-4">
             {features.map((feature, idx) => (

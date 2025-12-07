@@ -2,12 +2,12 @@ import { Logo } from "@/components/Logo";
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-border/40 bg-background/50 backdrop-blur-sm mt-20">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <Logo variant="full" size="sm" className="mb-4" />
-            <p className="text-muted-foreground text-sm font-inter">
+    <footer className="relative border-t border-border/40 bg-background/50 backdrop-blur-sm mt-12 sm:mt-16 lg:mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 lg:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
+          <div className="col-span-2 md:col-span-1 mb-2 sm:mb-0">
+            <Logo variant="full" size="sm" className="mb-3 sm:mb-4" />
+            <p className="text-muted-foreground text-xs sm:text-sm font-inter max-w-xs">
               The first platform designed for organizations to rent dedicated
               LLM instances.
             </p>
@@ -122,8 +122,8 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-sm font-inter">
+        <div className="border-t border-border/40 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
+          <p className="text-muted-foreground text-xs sm:text-sm font-inter text-center md:text-left">
             © 2025 EPHMRL.AI. All rights reserved.
           </p>
           <div className="flex gap-6">

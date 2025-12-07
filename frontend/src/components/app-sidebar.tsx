@@ -75,7 +75,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarHeader>
         <div className="px-2 py-1">
-          <Logo variant="full" size="sm" linkTo="/dashboard" />
+          <Logo variant="full" size="sm" linkTo="/" />
         </div>
         <ContextSwitcher />
         <SearchForm />
