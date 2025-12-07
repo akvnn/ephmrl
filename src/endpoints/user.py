@@ -30,7 +30,11 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.get("/info", response_model=UserResponse)
 async def user_info(
-    user: User = Depends(factory_get_current_user_from_cookie(load_projects=True)),
+    user: User = Depends(
+        factory_get_current_user_from_cookie(
+            load_projects=True, require_email_verified=True
+        )
+    ),
 ):
     return user
 

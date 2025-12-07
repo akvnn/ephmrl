@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from datetime import datetime
-
+import uuid
 from src.schemas.role import RoleInfo
 
 
@@ -76,12 +76,29 @@ class UserCreateFromAuth0(BaseModel):
         return v.lower()
 
 
+class UserOrganizationResponse(BaseModel):
+    """Response model"""
+
+    # TODO: use OrganizationResponse to avoid redundancy
+    id: uuid.UUID
+    name: str
+    slug: str
+    subscription_status: str
+
+    plan_display_name: str | None = None
+    plan_description: str | None = None
+    plan_features: dict | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserResponse(UserBase):
     """Response model"""
 
     avatar_url: str | None = None
     is_active: bool
     email_verified_at: datetime | None = None
+    organizations: list[UserOrganizationResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 
