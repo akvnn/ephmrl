@@ -99,10 +99,10 @@ jobs:
           CHART_PATH="k8s/charts/ephmrl"
           
           # Update subchart image tags
-          sed -i "0,/tag: \"\"/{s|tag: \"\".*|tag: \"api-${VERSION}\"|}" ${CHART_PATH}/charts/api/values.yaml
+          sed -i '0,/tag:/s|tag: ".*"|tag: "api-'${VERSION}'"|' ${CHART_PATH}/charts/api/values.yaml
 
           # Update frontend image tag
-          sed -i "0,/tag: \"\"/{s|tag: \"\".*|tag: \"frontend-${VERSION}\"|}" ${CHART_PATH}/values.yaml
+          sed -i '0,/tag:/s|tag: ".*"|tag: "frontend-'${VERSION}'"|' ${CHART_PATH}/values.yaml
           
           # Update subchart versions and appVersions
           CHART_VERSION="${VERSION#v}"
