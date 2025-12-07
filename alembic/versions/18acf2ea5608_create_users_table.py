@@ -36,8 +36,7 @@ def upgrade() -> None:
     sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('username')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index('ix_users_auth0_ids', 'users', ['auth0_user_ids'], unique=False, postgresql_using='gin')
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)

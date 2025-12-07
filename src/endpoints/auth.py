@@ -51,14 +51,14 @@ async def signup(
     user = await crud_user.create_user_with_org_native(db, user_data)
 
     token = generate_verification_token()
-    await store_user_token(db, user.id, token, TokenFunctions.VERIFY_EMAIL.value)
+    await store_user_token(db, user.id, token, TokenFunctions.VERIFY_EMAIL.value, 24)
 
-    access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email},
-        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
+    # access_token = create_access_token(
+    #     data={"sub": str(user.id), "email": user.email},
+    #     expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    # )
 
-    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    # refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
     resp = JSONResponse(
         content={"message": "Signup successful"},
@@ -66,7 +66,7 @@ async def signup(
         status_code=status.HTTP_201_CREATED,
     )
 
-    set_auth_cookies(resp, access_token, refresh_token)
+    # set_auth_cookies(resp, access_token, refresh_token)
 
     background_tasks.add_task(send_verification_email, user.email, token, settings)
 
@@ -91,6 +91,13 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
+        )
+    if not user.is_active:
+        raise UnauthorizedException("User account is inactive")
+
+    if user.primary_auth_provider == "ephmrl" and not user.email_verified_at:
+        raise UnauthorizedException(
+            "Email verification is required. Please verify your email to proceed."
         )
 
     # Create tokens

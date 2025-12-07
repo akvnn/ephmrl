@@ -19,7 +19,7 @@ class User(Base):
     # User information
     email = Column(String(255), unique=True, nullable=False, index=True)
     email_verified_at = Column(DateTime(timezone=True), nullable=True)
-    username = Column(String(100), unique=True, nullable=True)
+    username = Column(String(100), nullable=True)
 
     # Password hash for native auth
     password_hash = Column(String(255), nullable=True)
@@ -87,7 +87,7 @@ class UserToken(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     token = Column(String(64), unique=True, index=True, nullable=False)
     function = Column(
-        String(64), unique=True, index=True, nullable=False
+        String(64), index=True, nullable=False
     )  # e.g., email_verification, reset_password
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

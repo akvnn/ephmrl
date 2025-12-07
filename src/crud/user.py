@@ -55,7 +55,8 @@ async def get_user_by_id(
                 User.avatar_url,
                 User.is_active,
                 User.email_verified_at,
-                User.password_hash,  # TODO: this is used in change password, check if it has any risk
+                User.password_hash,
+                User.primary_auth_provider,
             )
         )
     )

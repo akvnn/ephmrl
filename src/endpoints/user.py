@@ -4,7 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.dependency import get_db, get_settings
 from src.crud import user as crud_user
 from src.models.user import TokenFunctions, User
-from src.schemas.user import PasswordResetRequest, PasswordResetConfirm, PasswordChange
+from src.schemas.user import (
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    PasswordChange,
+    UserResponse,
+)
 from src.security import (
     hash_password,
     verify_password,
@@ -14,6 +19,7 @@ from src.utils import factory_get_current_user_from_cookie, get_current_user_fro
 from src.tasks.email import (
     send_password_reset_email,
     generate_verification_token,
+    send_verification_email,
     store_user_token,
     verify_user_token,
     update_verification_status,
@@ -22,7 +28,7 @@ from src.tasks.email import (
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.get("/info")  # TODO: add response model
+@router.get("/info", response_model=UserResponse)
 async def user_info(
     user: User = Depends(factory_get_current_user_from_cookie(load_projects=True)),
 ):
@@ -54,6 +60,39 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.post("/resend-verification")
+async def resend_verification_email(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(
+        factory_get_current_user_from_cookie(require_email_verified=False)
+    ),
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    """
+    Resend email verification link to the current user.
+    """
+    if current_user.email_verified_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already verified",
+        )
+
+    token = generate_verification_token()
+    await store_user_token(
+        db, current_user.id, token, TokenFunctions.VERIFY_EMAIL.value, 24
+    )
+
+    background_tasks.add_task(
+        send_verification_email, current_user.email, token, settings
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Verification email resent successfully"},
+    )
+
+
 @router.post("/password/reset-request")
 async def request_password_reset(
     request: PasswordResetRequest,
@@ -77,7 +116,7 @@ async def request_password_reset(
         )
     return JSONResponse(
         content={
-            "message": "If that email exists, a password reset link has been sent."
+            "message": "If an account exists for the provided email, a password reset link has been sent."
         },
         media_type="application/json",
         status_code=status.HTTP_200_OK,

@@ -1,5 +1,6 @@
 from typing import Dict
-from fastapi import HTTPException, Depends, status
+from fastapi import Depends
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.security import auth, UnauthorizedException, UnauthenticatedException
 from src.models.user import User
@@ -61,9 +62,10 @@ async def get_current_user(
     payload: Dict = Depends(auth.verify), db: AsyncSession = Depends(get_db)
 ) -> User:
     """
+    [DEPRECATED]
     Validate JWT token (native RS256 or Auth0) using verify method (Bearer) and return user
     """
-
+    load_projects = False
     try:
         # Get user ID from token
         user_id_str: str = payload.get("sub")
@@ -74,17 +76,20 @@ async def get_current_user(
         # For Auth0, sub is auth0 user ID
         try:
             user_id = uuid.UUID(user_id_str)
-            user = await crud_user.get_user_by_id(db, user_id)
+            user = await crud_user.get_user_by_id(db, user_id, None, load_projects)
         except ValueError:
             # Not a UUID, must be Auth0 ID
-            user = await crud_user.get_user_by_auth0_id(db, user_id_str)
+            user = await crud_user.get_user_by_auth0_id(db, user_id_str, load_projects)
 
         if not user:
             raise UnauthorizedException
 
         if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
+            raise UnauthorizedException("User account is inactive")
+
+        if user.primary_auth_provider == "ephmrl" and not user.email_verified_at:
+            raise UnauthorizedException(
+                "Email verification is required. Please verify your email to proceed."
             )
 
         return user
@@ -93,11 +98,14 @@ async def get_current_user(
     except UnauthorizedException:
         raise
     except Exception as e:
-        raise UnauthorizedException(str(e))
+        logger.error(f"Error in get_current_user: {str(e)}")
+        raise UnauthorizedException("Something went wrong.")
 
 
 # Factory function (NOT async) that returns the actual dependency
-def factory_get_current_user_from_cookie(load_projects: bool = False):
+def factory_get_current_user_from_cookie(
+    load_projects: bool = False, require_email_verified: bool = False
+):
     # The actual dependency function (IS async)
     async def _get_user(
         payload: Dict = Depends(auth.verify_from_cookie),
@@ -127,9 +135,13 @@ def factory_get_current_user_from_cookie(load_projects: bool = False):
                 raise UnauthorizedException
 
             if not user.is_active:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User account is inactive",
+                raise UnauthorizedException("User account is inactive")
+
+            if require_email_verified and (
+                user.primary_auth_provider == "ephmrl" and not user.email_verified_at
+            ):
+                raise UnauthorizedException(
+                    "Email verification is required. Please verify your email to proceed."
                 )
 
             return user
@@ -138,7 +150,8 @@ def factory_get_current_user_from_cookie(load_projects: bool = False):
         except UnauthorizedException:
             raise
         except Exception as e:
-            raise UnauthorizedException(str(e))
+            logger.error(f"Error in factory_get_current_user_from_cookie: {str(e)}")
+            raise UnauthorizedException("Something went wrong.")
 
     return _get_user
 
@@ -146,12 +159,11 @@ def factory_get_current_user_from_cookie(load_projects: bool = False):
 async def get_current_user_from_cookie(
     payload: Dict = Depends(auth.verify_from_cookie),
     db: AsyncSession = Depends(get_db),
-    load_projects: bool = False,
 ) -> User:
     """
     Validate JWT token (native RS256 or Auth0) using verify_from_cookie method (Cookie) and return user
     """
-
+    load_projects = False
     try:
         # Get user ID from token
         user_id_str: str = payload.get("sub")
@@ -171,8 +183,11 @@ async def get_current_user_from_cookie(
             raise UnauthorizedException
 
         if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
+            raise UnauthorizedException("User account is inactive")
+
+        if user.primary_auth_provider == "ephmrl" and not user.email_verified_at:
+            raise UnauthorizedException(
+                "Email verification is required. Please verify your email to proceed."
             )
 
         return user
@@ -181,4 +196,5 @@ async def get_current_user_from_cookie(
     except UnauthorizedException:
         raise
     except Exception as e:
-        raise UnauthorizedException(str(e))
+        logger.error(f"Error in get_current_user_from_cookie: {str(e)}")
+        raise UnauthorizedException("Something went wrong.")
