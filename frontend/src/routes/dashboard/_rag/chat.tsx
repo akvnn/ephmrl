@@ -17,7 +17,8 @@ export const Route = createFileRoute("/dashboard/_rag/chat")({
     if (!org?.id) return { models: [] };
     return apiClient
       .get(`/llm/models/my/all?organization_id=${org.id}`)
-      .then((res) => ({ models: res.data }));
+      .then((res) => ({ models: res.data }))
+      .catch(() => ({ models: [] }));
   },
   component: ChatPage,
 });
@@ -322,7 +323,7 @@ function ChatPage() {
             selectedModelId={selectedModelId}
             onModelChange={handleModelChange}
             plugins={installedPlugins}
-            selectedPlugins={installedPlugins.map((p) => p.plugin_slug)}
+            selectedPlugins={selectedPlugins}
             onPluginChange={setSelectedPlugins}
             selectedTools={selectedTools}
             onToolChange={setSelectedTools}

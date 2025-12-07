@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as UserVerifyRouteImport } from './routes/user/verify'
 import { Route as DashboardMetricsRouteImport } from './routes/dashboard/metrics'
 import { Route as DashboardRagRouteImport } from './routes/dashboard/_rag'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/auth/',
   path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserVerifyRoute = UserVerifyRouteImport.update({
+  id: '/user/verify',
+  path: '/user/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardMetricsRoute = DashboardMetricsRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/metrics': typeof DashboardMetricsRoute
+  '/user/verify': typeof UserVerifyRoute
   '/auth': typeof AuthIndexRoute
   '/dashboard/deployed': typeof DashboardLlmDeployedRoute
   '/dashboard/models': typeof DashboardLlmModelsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/api/checkout': typeof ApiCheckoutRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/metrics': typeof DashboardMetricsRoute
+  '/user/verify': typeof UserVerifyRoute
   '/auth': typeof AuthIndexRoute
   '/dashboard/deployed': typeof DashboardLlmDeployedRoute
   '/dashboard/models': typeof DashboardLlmModelsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/_rag': typeof DashboardRagRouteWithChildren
   '/dashboard/metrics': typeof DashboardMetricsRoute
+  '/user/verify': typeof UserVerifyRoute
   '/auth/': typeof AuthIndexRoute
   '/dashboard/_llm/deployed': typeof DashboardLlmDeployedRoute
   '/dashboard/_llm/models': typeof DashboardLlmModelsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/auth/callback'
     | '/dashboard/metrics'
+    | '/user/verify'
     | '/auth'
     | '/dashboard/deployed'
     | '/dashboard/models'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/auth/callback'
     | '/dashboard/metrics'
+    | '/user/verify'
     | '/auth'
     | '/dashboard/deployed'
     | '/dashboard/models'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/dashboard/_rag'
     | '/dashboard/metrics'
+    | '/user/verify'
     | '/auth/'
     | '/dashboard/_llm/deployed'
     | '/dashboard/_llm/models'
@@ -172,6 +184,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  UserVerifyRoute: typeof UserVerifyRoute
   AuthIndexRoute: typeof AuthIndexRoute
 }
 
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/verify': {
+      id: '/user/verify'
+      path: '/user/verify'
+      fullPath: '/user/verify'
+      preLoaderRoute: typeof UserVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/metrics': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   ApiCheckoutRoute: ApiCheckoutRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  UserVerifyRoute: UserVerifyRoute,
   AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport

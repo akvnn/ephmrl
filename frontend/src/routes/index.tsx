@@ -140,7 +140,10 @@ function App() {
                 >
                   Get Started
                 </button>
-                <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 hover:border-muted-foreground/20 transition-all duration-200 cursor-pointer">
+                <button
+                  onClick={() => navigate({ to: "/docs" })}
+                  className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:bg-muted/50 hover:border-muted-foreground/20 transition-all duration-200 cursor-pointer"
+                >
                   Documentation
                 </button>
               </div>

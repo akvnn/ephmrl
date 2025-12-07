@@ -1,6 +1,7 @@
 import { createRouter } from "@tanstack/react-router";
 import { useOrganizationStore } from "@/hooks/use-organization";
 import { useProjectStore } from "@/hooks/use-project";
+import NotFound from "@/components/NotFound";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
@@ -17,7 +18,7 @@ export const getRouter = () => {
         useOrganizationStore.getState().currentOrganization,
       getProject: () => useProjectStore.getState().currentProject,
     },
-    defaultNotFoundComponent: () => <div>404: Page Not Found</div>,
+    defaultNotFoundComponent: NotFound,
   });
 
   return router;

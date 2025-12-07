@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { authService, type SignupData, type LoginData } from "@/lib/auth";
-import type { User, OrganizationWithProjects } from "@/types/auth";
+import type { User } from "@/types/auth";
 import { toast } from "sonner";
 import { useOrganizationStore } from "./use-organization";
 import { useProjectStore } from "./use-project";
@@ -44,7 +44,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await authService.signup(data);
       set({ isInitialized: false });
-      toast.success("Account created successfully!");
+      toast.success(
+        "Account created successfully! Please check your email to verify."
+      );
     } catch (error: any) {
       const message =
         error.response?.data?.detail || "Signup failed. Please try again.";
@@ -95,16 +97,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      const organizations = user.organizations || [];
-      useOrganizationStore.getState().setOrganizations(organizations);
+      await useOrganizationStore.getState().fetchAndSetOrganizations();
 
       const currentOrganization =
         useOrganizationStore.getState().currentOrganization;
 
       if (currentOrganization) {
-        const orgWithProjects = currentOrganization as OrganizationWithProjects;
-        const projects = orgWithProjects.projects || [];
-        useProjectStore.getState().setProjects(projects);
+        await useProjectStore
+          .getState()
+          .fetchAndSetProjects(currentOrganization.id);
       }
     } catch (error: any) {
       set({
@@ -113,7 +114,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isInitialized: true,
         isLoading: false,
       });
-      console.error("Failed to initialize user context:", error);
     }
   },
 }));

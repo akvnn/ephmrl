@@ -35,12 +35,18 @@ function AuthPage() {
   const search = useSearch({ from: "/auth/" });
   const [mode, setMode] = useState<AuthMode>("login");
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
     if (search.reset_token) {
       setMode("reset-password");
+      return;
     }
-  }, [search.reset_token]);
+
+    if (isAuthenticated) {
+      navigate({ to: "/dashboard/deployed" });
+    }
+  }, [search.reset_token, isAuthenticated, navigate]);
 
   const handleSuccess = () => {
     navigate({ to: "/dashboard/deployed" });

@@ -9,9 +9,9 @@ interface LogoProps {
 }
 
 const sizeConfig = {
-  sm: { width: 120, height: 20, iconSize: 20, fontSize: 16 },
-  md: { width: 180, height: 28, iconSize: 28, fontSize: 22 },
-  lg: { width: 240, height: 36, iconSize: 36, fontSize: 28 },
+  sm: { width: 160, height: 28, iconSize: 28, fontSize: 22 },
+  md: { width: 240, height: 40, iconSize: 40, fontSize: 32 },
+  lg: { width: 320, height: 52, iconSize: 52, fontSize: 40 },
 };
 
 function LogoMark({ size = 48 }: { size?: number }) {

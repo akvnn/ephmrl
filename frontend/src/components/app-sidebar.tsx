@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useThemeStore } from "@/hooks/use-theme";
-import { Settings, Sun, Moon, LogOut, ChevronDown } from "lucide-react";
+import { Settings, Sun, Moon, LogOut, ChevronDown, Loader2 } from "lucide-react";
+import { useAuthStore } from "@/hooks/use-auth";
 
 import { Logo } from "@/components/Logo";
 import { SearchForm } from "@/components/search-form";
@@ -69,7 +70,13 @@ const navMain = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const { resolvedTheme, setTheme } = useThemeStore();
+  const { logout, isLoading } = useAuthStore();
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/";
+  };
 
   return (
     <Sidebar {...props}>
@@ -134,6 +141,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <Moon className="h-3 w-3" />
                       )}
                       {resolvedTheme === "dark" ? "Light" : "Dark"}
+                    </span>
+                  </button>
+                </div>
+                <div className="space-y-2 mt-3 pt-3 border-t border-sidebar-border">
+                  <p className="text-xs text-sidebar-foreground/60 px-2">
+                    Account
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition-colors text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      {isLoading ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <LogOut className="h-3 w-3" />
+                      )}
+                      {isLoading ? "Logging out..." : "Logout"}
                     </span>
                   </button>
                 </div>

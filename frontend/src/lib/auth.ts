@@ -60,4 +60,11 @@ export const authService = {
     const response = await apiClient.post<AuthResponse>("/user/password/reset-confirm", data);
     return response.data;
   },
+
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    const response = await apiClient.get<AuthResponse>("/user/verify", {
+      params: { token },
+    });
+    return response.data;
+  },
 };

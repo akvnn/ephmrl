@@ -11,7 +11,7 @@ import { ModelsTable } from "@/components/models/ModelsTable";
 import { DeployDialog } from "@/components/models/DeployDialog";
 
 export const Route = createFileRoute("/dashboard/_llm/models")({
-  loader: () => listAllModels(),
+  loader: () => listAllModels().catch(() => []),
   component: ModelsPage,
 });
 

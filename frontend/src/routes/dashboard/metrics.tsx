@@ -4,17 +4,25 @@ import { ResponsiveRadar } from "@nivo/radar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { listLLMSubinstances } from "@/lib/llm";
 import { projectService } from "@/lib/project";
+import { getDocumentCount } from "@/lib/document";
 import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/dashboard/metrics")({
   loader: ({ context }) => {
     const org = context.getOrganization();
-    if (!org?.id) return { llmSubinstances: [], projects: [] };
+    if (!org?.id) return { llmSubinstances: [], projects: [], documentCount: 0 };
     return Promise.all([
       listLLMSubinstances({ organization_id: org.id }),
       projectService.fetchProjectsByOrganization(org.id),
-    ]).then(([llmSubinstances, projects]) => ({ llmSubinstances, projects }));
+      getDocumentCount(org.id),
+    ])
+      .then(([llmSubinstances, projects, documentCount]) => ({
+        llmSubinstances,
+        projects,
+        documentCount,
+      }))
+      .catch(() => ({ llmSubinstances: [], projects: [], documentCount: 0 }));
   },
   component: DashboardPage,
 });
@@ -51,7 +59,7 @@ function formatTimeAgo(date: Date): string {
 }
 
 function DashboardPage() {
-  const { llmSubinstances, projects } = Route.useLoaderData();
+  const { llmSubinstances, projects, documentCount } = Route.useLoaderData();
   const { resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme === "dark";
 
@@ -201,11 +209,7 @@ function DashboardPage() {
           />
           <StatCard title="Unique Models" value={uniqueModels} />
           <StatCard title="Active Projects" value={projects.length} />
-          <StatCard
-            title="Documents"
-            value="Coming Soon"
-            subtitle="Endpoint in development"
-          />
+          <StatCard title="Documents" value={documentCount} />
         </div>
 
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
