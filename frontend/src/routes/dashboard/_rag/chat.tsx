@@ -7,6 +7,7 @@ import { useProjectStore } from "@/hooks/use-project";
 import { usePluginStore } from "@/hooks/use-plugin";
 import { toast } from "sonner";
 import apiClient from "@/lib/axios";
+import { getConfigSync } from "@/lib/config";
 import AI_Prompt, { type AIModel } from "@/components/kokonutui/ai-prompt";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -119,7 +120,7 @@ function ChatPage() {
       wsRef.current.close();
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const apiUrl = getConfigSync()?.apiUrl || "http://localhost:8000";
     const wsProtocol = apiUrl.startsWith("https") ? "wss" : "ws";
     const wsHost = apiUrl.replace(/^https?:\/\//, "");
     const wsUrl = `${wsProtocol}://${wsHost}/inference/${modelId}/chat?organization_id=${currentOrganization.id}`;

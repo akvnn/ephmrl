@@ -1,14 +1,18 @@
 import axios from "axios";
-
-const DOCUMENT_API_URL =
-  import.meta.env.VITE_DOCUMENT_API_URL || "http://localhost:8001";
+import { getConfigSync } from "./config";
 
 const documentClient = axios.create({
-  baseURL: DOCUMENT_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+documentClient.interceptors.request.use((config) => {
+  if (!config.baseURL) {
+    config.baseURL = getConfigSync()?.documentApiUrl || "http://localhost:8001";
+  }
+  return config;
 });
 
 export interface DocumentInfo {
