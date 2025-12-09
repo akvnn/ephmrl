@@ -7,6 +7,7 @@ from loguru import logger
 
 from src.configuration import config
 from src.crud.llm import LLMSubinstanceCRUD
+from src.crud.organization import OrganizationCRUD
 from src.crud.plugin import OrganizationPluginCRUD
 from src.dependency import get_db
 from src.models.user import User
@@ -27,13 +28,32 @@ async def inference_websocket(
     user: User = Depends(get_current_user_from_cookie),
     db: AsyncSession = Depends(get_db),
 ):
+    org_id = uuid.UUID(organization_id)
     connection_id = f"{organization_id}_{llm_subinstance_id}_{uuid.uuid4()}"
     await manager.connect(websocket, connection_id)
 
+    has_perm = await OrganizationCRUD.validate_user_permission_for_org(
+        db, user.id, org_id, "inference.chat"
+    )
+    if not has_perm:
+        await manager.send_json(
+            connection_id,
+            {"type": "error", "message": "Unauthorized."},
+        )
+        return
     try:
-        org_id = uuid.UUID(organization_id)
-
         async for data in websocket.iter_json():
+            # Check rate limit BEFORE processing
+            credits = await OrganizationCRUD.check_and_deduct_org_credits(db, org_id, 1)
+            if credits is not None and credits <= 0:
+                await manager.send_json(
+                    connection_id,
+                    {
+                        "type": "error",
+                        "message": "Organization has insufficient credits for inference.",
+                    },
+                )
+                return
             try:
                 request = InferenceRequest(**data)
             except Exception as e:

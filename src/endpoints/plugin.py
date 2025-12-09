@@ -2,9 +2,11 @@ from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import httpx
+from src.crud.organization import OrganizationCRUD
 from src.crud.plugin import PluginCRUD, OrganizationPluginCRUD
 from src.dependency import get_db, get_settings
 from src.models.user import User
+from src.security import UnauthorizedException
 from src.utils import get_current_user_from_cookie
 from src.configuration import Settings
 from src.schemas.plugin import InstallPluginRequest, PluginResponse
@@ -22,6 +24,16 @@ async def get_installed_plugins(
     db: AsyncSession = Depends(get_db),
 ):
     try:
+        org_id = UUID(organization_id)
+
+        has_perm = await OrganizationCRUD.validate_user_permission_for_org(
+            db, user.id, org_id, "organization.view"
+        )
+        if not has_perm:
+            raise UnauthorizedException(
+                detail="User does not have permission or organization does not exist."
+            )
+
         plugins = await OrganizationPluginCRUD.get_installed(db, UUID(organization_id))
         plugin_responses = [
             PluginResponse(
@@ -58,11 +70,20 @@ async def proxy_to_plugin(
                 detail=f"Plugin '{plugin_slug}' not found",
             )
 
-        org_id = request.query_params.get("organization_id")
-        if not org_id:
+        organization_id = request.query_params.get("organization_id")
+        if not organization_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="organization_id required",
+                detail="Bad request.",
+            )
+
+        org_id = UUID(organization_id)
+        has_perm = await OrganizationCRUD.validate_user_permission_for_org(
+            db, user.id, org_id, "plugin.use"
+        )
+        if not has_perm:
+            raise UnauthorizedException(
+                detail="User does not have permission or organization does not exist."
             )
 
         target_url = f"{settings.PLUGIN_BASE_URL}/{plugin_slug}/{path}"
@@ -112,6 +133,15 @@ async def install_plugin(
     settings: Settings = Depends(get_settings),
 ):
     try:
+        org_id = UUID(request.organization_id)
+        has_perm = await OrganizationCRUD.validate_user_permission_for_org(
+            db, user.id, org_id, "organization.update"
+        )
+        if not has_perm:
+            raise UnauthorizedException(
+                detail="User does not have permission or organization does not exist."
+            )
+
         plugin = await PluginCRUD.get_by_slug(db, request.plugin_slug)
         if not plugin:
             raise HTTPException(
@@ -121,7 +151,7 @@ async def install_plugin(
 
         await OrganizationPluginCRUD.install(
             db=db,
-            org_id=UUID(request.organization_id),
+            org_id=org_id,
             plugin_slug=request.plugin_slug,
             plugin_base_url=settings.PLUGIN_BASE_URL,
         )
