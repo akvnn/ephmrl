@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: "description",
-        content: "The first platform designed for organizations to rent dedicated LLM instances.",
+        content: "Private LLM infrastructure for your needs.",
       },
     ],
     links: [

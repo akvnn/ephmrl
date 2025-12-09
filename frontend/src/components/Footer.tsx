@@ -8,8 +8,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 mb-2 sm:mb-0">
             <Logo variant="full" size="sm" className="mb-3 sm:mb-4" />
             <p className="text-muted-foreground text-xs sm:text-sm font-inter max-w-xs">
-              The first platform designed for organizations to rent dedicated
-              LLM instances.
+              Private LLM infrastructure for your needs.
             </p>
           </div>
           <div>

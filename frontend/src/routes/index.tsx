@@ -71,7 +71,7 @@ function App() {
       tagline: "Perfect for exploring and testing the platform capabilities.",
       features: [
         "Full playground access",
-        "Test any open-source model",
+        "Test any open-source model with generous limits",
         "Community support",
         "Public documentation",
       ],
@@ -127,9 +127,7 @@ function App() {
                 </h1>
 
                 <p className="text-base sm:text-xl text-muted-foreground leading-relaxed font-inter max-w-xl">
-                  Privacy-first platform designed for organizations to rent
-                  dedicated LLM instances. No complex setup. No shared
-                  resources. Just powerful AI at your fingertips.
+                  Private LLM infrastructure for your needs.
                 </p>
               </div>
 
@@ -386,9 +384,9 @@ function App() {
             <div className="relative px-5 py-10 sm:px-10 sm:py-14 lg:px-16 lg:py-20">
               <div className="text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground tracking-tight leading-[1.1]">
-                  Ready to take back
+                  Ready to regain
                   <span className="block mt-1 sm:mt-2 bg-linear-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                    control of your data?
+                    control?
                   </span>
                 </h2>
 
