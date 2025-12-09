@@ -24,7 +24,7 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 interface SignupFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (email: string) => void;
 }
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
@@ -55,7 +55,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         full_name: values.full_name,
         password: values.password,
       });
-      onSuccess?.();
+      onSuccess?.(values.email);
     } catch (error) {
       console.error("Signup error:", error);
     }
