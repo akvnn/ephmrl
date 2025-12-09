@@ -79,7 +79,7 @@ async def proxy_to_plugin(
 
         org_id = UUID(organization_id)
         has_perm = await OrganizationCRUD.validate_user_permission_for_org(
-            db, user.id, org_id, "plugin.use"
+            db, user.id, org_id, "plugins.use"
         )
         if not has_perm:
             raise UnauthorizedException(
