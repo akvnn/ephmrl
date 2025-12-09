@@ -240,5 +240,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # Delete seeded data
-    op.execute("DELETE FROM llm_instances WHERE model_name IN ('Mistral Large 3 2512 - Primary Instance', 'DeepSeek V3.2 - Primary Instance', 'GPT-OSS 120B - Primary Instance', 'GPT-OSS 20B - Primary Instance', 'Meta: Llama 3 8B Instruct - Primary Instance', 'MoonshotAI: Kimi K2 Thinking - Primary Instance')")
+    op.execute("DELETE FROM llm_instances WHERE name IN ('Mistral Large 3 2512 - Primary Instance', 'DeepSeek V3.2 - Primary Instance', 'GPT-OSS 120B - Primary Instance', 'GPT-OSS 20B - Primary Instance', 'Meta: Llama 3 8B Instruct - Primary Instance', 'MoonshotAI: Kimi K2 Thinking - Primary Instance')")
     op.execute("DELETE FROM listed_llms WHERE slug IN ('mistral-large-2512', 'deepseek-v3-2', 'gpt-oss-120b', 'gpt-oss-20b', 'llama-3-8b-instruct', 'kimi-k2-thinking')")
