@@ -34,7 +34,7 @@ def upgrade() -> None:
         SET features = jsonb_set(
             features - 'advanced_analytics',
             '{{llm_limits}}',
-            '{{"max_dedicated_llms": 0, "max_instances": 1, "instance_limits": [{{"max_params": "7B", "max_count": 1}}]}}'::jsonb
+            '{{"max_dedicated_llms": 0, "max_instances": 2, "instance_limits": [{{"max_params": "675B", "max_count": 1}}, {{"max_params": "70B", "max_count": 1}}]}}'::jsonb
         )
         WHERE id = '{FREE_PLAN_ID}'
     """)
@@ -45,7 +45,7 @@ def upgrade() -> None:
         SET features = jsonb_set(
             features - 'advanced_analytics',
             '{{llm_limits}}',
-            '{{"max_dedicated_llms": 1, "max_instances": 2, "instance_limits": [{{"max_params": "70B", "max_count": 2}}]}}'::jsonb
+            '{{"max_dedicated_llms": 1, "max_instances": 2, "instance_limits": [{{"max_params": "675B", "max_count": 2}}, {{"max_params": "70B", "max_count": 2}}]}}'::jsonb
         )
         WHERE id = '{STARTER_PLAN_ID}'
     """)
@@ -56,7 +56,7 @@ def upgrade() -> None:
         SET features = jsonb_set(
             features - 'advanced_analytics' - 'custom_integrations',
             '{{llm_limits}}',
-            '{{"max_dedicated_llms": 2, "max_instances": 4, "instance_limits": [{{"max_params": "270B", "max_count": 2}}, {{"max_params": "70B", "max_count": 2}}]}}'::jsonb
+            '{{"max_dedicated_llms": 2, "max_instances": 4, "instance_limits": [{{"max_params": "675B", "max_count": 10}}, {{"max_params": "70B", "max_count": 10}}]}}'::jsonb
         )
         WHERE id = '{PRO_PLAN_ID}'
     """)

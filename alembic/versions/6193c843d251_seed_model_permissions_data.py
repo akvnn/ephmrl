@@ -30,7 +30,10 @@ MODEL_VIEW_ID = UUID_TYPE('20000000-0000-0000-0000-000000000051')
 MODEL_CREATE_ID = UUID_TYPE('20000000-0000-0000-0000-000000000052')
 MODEL_UPDATE_ID = UUID_TYPE('20000000-0000-0000-0000-000000000053')
 MODEL_DELETE_ID = UUID_TYPE('20000000-0000-0000-0000-000000000054')
-
+# Plugin Management
+PLUGIN_USE_ID = UUID_TYPE('20000000-0000-0000-0000-000000000061')
+# Inference Management
+INFERENCE_CHAT_ID = UUID_TYPE('20000000-0000-0000-0000-000000000062')
 
 def upgrade() -> None:
     """Insert seed data for permissions"""
@@ -71,7 +74,23 @@ def upgrade() -> None:
             'resource': 'model',
             'action': 'delete',
             'description': 'Delete a provisioned model',
-        }
+        },
+        # Plugin Management
+        {
+            'id': PLUGIN_USE_ID,
+            'name': 'plugins.use',
+            'resource': 'plugin',
+            'action': 'use',
+            'description': 'Use installed plugins within the organization',
+        },
+        # Inference Management
+        {
+            'id': INFERENCE_CHAT_ID,
+            'name': 'inference.chat',
+            'resource': 'inference',
+            'action': 'chat',
+            'description': 'Access chat inference capabilities',
+        },
     ])
     op.execute(f"""
         INSERT INTO role_permissions (role_id, permission_id)
@@ -85,7 +104,15 @@ def upgrade() -> None:
             ('{ADMIN_ROLE_ID}', '{MODEL_CREATE_ID}'),
             ('{ADMIN_ROLE_ID}', '{MODEL_UPDATE_ID}'),
             ('{ADMIN_ROLE_ID}', '{MODEL_DELETE_ID}'),
-            ('{MEMBER_ROLE_ID}', '{MODEL_VIEW_ID}')
+            ('{MEMBER_ROLE_ID}', '{MODEL_VIEW_ID}'),
+            -- Plugins
+            ('{OWNER_ROLE_ID}', '{PLUGIN_USE_ID}'),
+            ('{ADMIN_ROLE_ID}', '{PLUGIN_USE_ID}'),
+            ('{MEMBER_ROLE_ID}', '{PLUGIN_USE_ID}'),
+            -- Inference
+            ('{OWNER_ROLE_ID}', '{INFERENCE_CHAT_ID}'),
+            ('{ADMIN_ROLE_ID}', '{INFERENCE_CHAT_ID}'),
+            ('{MEMBER_ROLE_ID}', '{INFERENCE_CHAT_ID}')
         """
     )
 
@@ -98,6 +125,8 @@ def downgrade() -> None:
             '20000000-0000-0000-0000-000000000051',
             '20000000-0000-0000-0000-000000000052',
             '20000000-0000-0000-0000-000000000053',
-            '20000000-0000-0000-0000-000000000054'
+            '20000000-0000-0000-0000-000000000054',
+            '20000000-0000-0000-0000-000000000061',
+            '20000000-0000-0000-0000-000000000062
         )
     """)

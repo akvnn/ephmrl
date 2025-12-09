@@ -49,6 +49,12 @@ MODEL_DELETE_ID = UUID("20000000-0000-0000-0000-000000000054")
 # Admins
 ADMIN_IDS = [UUID("abadb3fa-021b-4091-9abf-db662db4e54b")]
 
+# Plugin Management
+PLUGIN_USE_ID = UUID("20000000-0000-0000-0000-000000000061")
+
+# Inference Management
+INFERENCE_CHAT_ID = UUID("20000000-0000-0000-0000-000000000062")
+
 # Temporary mapping for LLM model names to OLLAMA model identifiers
 OLLAMA_MODEL_MAPPING = {
     "mistralai/Mistral-7B-Instruct-v0.3": "mistral:7b",
