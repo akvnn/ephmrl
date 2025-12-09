@@ -1,19 +1,4 @@
-import axios from "axios";
-import { getConfigSync } from "./config";
-
-const documentClient = axios.create({
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-documentClient.interceptors.request.use((config) => {
-  if (!config.baseURL) {
-    config.baseURL = getConfigSync()?.documentApiUrl || "http://localhost:8001";
-  }
-  return config;
-});
+import { apiClient } from "./axios";
 
 export interface DocumentInfo {
   id: string;
@@ -34,6 +19,7 @@ export interface DocumentPaginationResponse {
 }
 
 export interface ListDocumentsParams {
+  plugin_slug: string;
   organization_id: string;
   project_id?: string;
   page?: number;
@@ -43,8 +29,8 @@ export interface ListDocumentsParams {
 export const listDocuments = async (
   params: ListDocumentsParams
 ): Promise<DocumentPaginationResponse> => {
-  const response = await documentClient.get<DocumentPaginationResponse>(
-    "/recent_documents_info",
+  const response = await apiClient.get<DocumentPaginationResponse>(
+    `/plugins/${params.plugin_slug}/recent_documents_info`,
     {
       params: {
         organization_id: params.organization_id,
@@ -58,9 +44,11 @@ export const listDocuments = async (
 };
 
 export const getDocumentCount = async (
+  plugin_slug: string,
   organization_id: string
 ): Promise<number> => {
   const response = await listDocuments({
+    plugin_slug,
     organization_id,
     page: 1,
     per_page: 1,

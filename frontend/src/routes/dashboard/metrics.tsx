@@ -7,15 +7,23 @@ import { projectService } from "@/lib/project";
 import { getDocumentCount } from "@/lib/document";
 import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
+import { usePluginStore } from "@/hooks/use-plugin";
 
 export const Route = createFileRoute("/dashboard/metrics")({
   loader: ({ context }) => {
     const org = context.getOrganization();
     if (!org?.id) return { llmSubinstances: [], projects: [], documentCount: 0 };
+
+    const pluginSlug = usePluginStore.getState().selectedPlugin;
+
+    const documentCountPromise = pluginSlug
+      ? getDocumentCount(pluginSlug, org.id)
+      : Promise.resolve(0);
+
     return Promise.all([
       listLLMSubinstances({ organization_id: org.id }),
       projectService.fetchProjectsByOrganization(org.id),
-      getDocumentCount(org.id),
+      documentCountPromise,
     ])
       .then(([llmSubinstances, projects, documentCount]) => ({
         llmSubinstances,

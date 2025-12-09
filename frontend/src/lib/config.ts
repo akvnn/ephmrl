@@ -2,14 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 
 export interface RuntimeConfig {
   apiUrl: string;
-  documentApiUrl: string;
 }
 
 export const getRuntimeConfig = createServerFn({ method: "GET" }).handler(
   (): RuntimeConfig => {
     return {
       apiUrl: process.env.API_URL || "http://localhost:8000",
-      documentApiUrl: process.env.DOCUMENT_API_URL || "http://localhost:8001",
     };
   }
 );
