@@ -55,7 +55,7 @@ def upgrade() -> None:
             'max_members': 3,
             'max_projects': 5,
             'max_storage_gb': 1,
-            'credits_per_month': 100,
+            'credits_per_month': 20,
             'features': {
                 'api_access': False,
                 'priority_support': False,
@@ -81,7 +81,7 @@ def upgrade() -> None:
                 'custom_domain': False,
                 'advanced_analytics': True,
             },
-            'is_active': True,
+            'is_active': False,
         },
         {
             'id': PRO_PLAN_ID,
@@ -101,7 +101,7 @@ def upgrade() -> None:
                 'advanced_analytics': True,
                 'custom_integrations': True,
             },
-            'is_active': True,
+            'is_active': False,
         },
         {
             'id': ENTERPRISE_PLAN_ID,
@@ -131,6 +131,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Remove seed data for plans"""
+    op.execute("DELETE FROM organizations")
     op.execute("""
         DELETE FROM plans 
         WHERE id IN (

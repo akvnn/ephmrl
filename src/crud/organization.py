@@ -1,5 +1,6 @@
+from loguru import logger
 from sqlalchemy import select, delete, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, load_only
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
@@ -395,3 +396,45 @@ class OrganizationCRUD:
         )
 
         await db.commit()
+
+    async def check_and_deduct_org_credits(
+        db: AsyncSession, org_id: uuid.UUID, deduct_amount: int
+    ) -> Optional[int]:
+        """
+        Check the remaining credits for an organization.
+
+        Args:
+            organization_id: Organization UUID
+            deduct_amount: integer
+        Returns:
+            Remaining credits as integer after deduction, or None if unlimited
+        """
+        result = await db.execute(
+            select(Organization)
+            .where(Organization.id == org_id)
+            .options(
+                load_only(
+                    Organization.credits_used_this_period, Organization.credits_balance
+                )
+            )
+        )
+        org = result.scalar_one_or_none()
+
+        if not org:
+            logger.error(
+                f"CRITICAL: Organization {org_id} not found when checking credits."
+            )
+            return 0
+
+        if org.credits_balance is None:
+            return None  # Unlimited credits
+
+        org_credits = org.credits_balance - org.credits_used_this_period
+
+        if org_credits is not None and org_credits >= deduct_amount:
+            org.credits_used_this_period += deduct_amount
+            await db.commit()
+            org_credits -= deduct_amount
+            return org_credits
+        logger.warning(f"Organization {org_id} has insufficient credits.")
+        return 0  # Insufficient credits

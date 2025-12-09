@@ -71,12 +71,14 @@ class LLMInstance(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)  # display name
-    # provider = Column(String(100), nullable=False)  # e.g., "vLLM"
     model_name = Column(String(100), nullable=False)  # e.g., "llama4"
     model_type = Column(String(50), nullable=False)  # e.g., "chat", "completion"
     base_config = Column(
         JSONB, default={}, nullable=False
     )  # Default configuration for this model
+    provider_config = Column(
+        JSONB, default={}, nullable=False
+    )  # Provider specific configuration
     status = Column(String(50), nullable=False)  # e.g., "active", "down"
     maximum_tenants = Column(
         Integer, nullable=False

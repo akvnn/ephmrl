@@ -1,14 +1,23 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { Auth0Provider } from "@auth0/auth0-react";
 import { useEffect } from "react";
 import { useAuthStore } from "@/hooks/use-auth";
 import { useThemeStore } from "@/hooks/use-theme";
+import type { Organization } from "@/types/organization";
+import type { Project } from "@/types/project";
 
-export const Route = createRootRoute({
+export interface RouterContext {
+  getOrganization: () => Organization | null;
+  getProject: () => Project | null;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {
@@ -19,13 +28,22 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Ephmrl",
+        title: "ephmrl",
+      },
+      {
+        name: "description",
+        content: "Private LLM infrastructure for your needs.",
       },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href: "/favicon.svg",
       },
     ],
   }),
@@ -40,9 +58,29 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('theme-storage');
+                  var theme = 'system';
+                  if (stored) {
+                    var parsed = JSON.parse(stored);
+                    theme = parsed.state?.theme || 'system';
+                  }
+                  var resolved = theme === 'system'
+                    ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+                    : theme;
+                  document.documentElement.classList.add(resolved);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <Auth0Provider
@@ -55,17 +93,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {children}
         </Auth0Provider>
         <Toaster />
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
         <Scripts />
       </body>
     </html>

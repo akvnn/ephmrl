@@ -1,14 +1,13 @@
 import uuid
-import json
-from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, WebSocket, Depends
+from fastapi import APIRouter, Query, WebSocket, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from src.configuration import config
 from src.crud.llm import LLMSubinstanceCRUD
+from src.crud.organization import OrganizationCRUD
 from src.crud.plugin import OrganizationPluginCRUD
 from src.dependency import get_db
 from src.models.user import User
@@ -16,6 +15,7 @@ from src.schemas.inference import InferenceRequest
 from src.utils import get_current_user_from_cookie
 from src.websocket import manager
 from src.constants import OLLAMA_MODEL_MAPPING
+from src.crud.inference import InferenceCRUD
 
 router = APIRouter(prefix="/inference", tags=["AI Inference"])
 
@@ -24,19 +24,36 @@ router = APIRouter(prefix="/inference", tags=["AI Inference"])
 async def inference_websocket(
     websocket: WebSocket,
     llm_subinstance_id: str,
-    organization_id: str,
+    organization_id: str = Query(...),
     user: User = Depends(get_current_user_from_cookie),
     db: AsyncSession = Depends(get_db),
 ):
+    org_id = uuid.UUID(organization_id)
     connection_id = f"{organization_id}_{llm_subinstance_id}_{uuid.uuid4()}"
     await manager.connect(websocket, connection_id)
 
+    has_perm = await OrganizationCRUD.validate_user_permission_for_org(
+        db, user.id, org_id, "inference.chat"
+    )
+    if not has_perm:
+        await manager.send_json(
+            connection_id,
+            {"type": "error", "message": "Unauthorized."},
+        )
+        return
     try:
-        org_id = UUID(organization_id)
-
-        async for data in websocket.iter_text():
-            data = await websocket.receive_json()
-
+        async for data in websocket.iter_json():
+            # Check rate limit BEFORE processing
+            credits = await OrganizationCRUD.check_and_deduct_org_credits(db, org_id, 1)
+            if credits is not None and credits <= 0:
+                await manager.send_json(
+                    connection_id,
+                    {
+                        "type": "error",
+                        "message": "Organization has insufficient credits for inference.",
+                    },
+                )
+                return
             try:
                 request = InferenceRequest(**data)
             except Exception as e:
@@ -47,11 +64,15 @@ async def inference_websocket(
                 continue
 
             subinstance = await LLMSubinstanceCRUD.get_by_id(
-                db, UUID(llm_subinstance_id), org_id
+                db, uuid.UUID(llm_subinstance_id), org_id
             )
             if not subinstance:
                 await manager.send_json(
-                    connection_id, {"type": "error", "message": "LLM model not found"}
+                    connection_id,
+                    {
+                        "type": "error",
+                        "message": "LLM is not available. Please try again later.",
+                    },
                 )
                 continue
 
@@ -59,9 +80,19 @@ async def inference_websocket(
             if llm_instance.status != "active":
                 await manager.send_json(
                     connection_id,
-                    {"type": "error", "message": f"LLM is {llm_instance.status}"},
+                    {
+                        "type": "error",
+                        "message": "LLM is not active. Please try again later.",
+                    },
                 )
                 continue
+
+            provider = (
+                llm_instance.provider_config.get("provider")
+                if llm_instance.provider_config
+                and llm_instance.provider_config.get("provider")
+                else "openrouter"
+            )
 
             plugin_context = None
             if request.plugin_slug:
@@ -73,7 +104,7 @@ async def inference_websocket(
                         connection_id,
                         {
                             "type": "error",
-                            "message": f"Plugin '{request.plugin_slug}' not installed",
+                            "message": f"Plugin '{request.plugin_slug}' is not installed.",
                         },
                     )
                     continue
@@ -88,10 +119,11 @@ async def inference_websocket(
                         payload = {
                             "organization_id": str(org_id),
                             "query": request.prompt,
-                            "limit": 5,
+                            "limit": request.plugin_chunks_limit or 3,
+                            "project_id": str(request.project_id),
                         }
-                        if request.project_id:
-                            payload["project_id"] = request.project_id
+                        # if request.project_id:
+                        #     payload["project_id"] = request.project_id
 
                         async with httpx.AsyncClient(timeout=30.0) as client:
                             resp = await client.post(plugin_url, json=payload)
@@ -124,35 +156,58 @@ async def inference_websocket(
             messages.append({"role": "user", "content": final_prompt})
 
             llm_url = (
-                llm_instance.base_config.get("endpoint_url", "http://localhost:11434")
-                if llm_instance.base_config
+                llm_instance.provider_config.get(
+                    "endpoint_url", "http://localhost:11434"
+                )
+                if llm_instance.provider_config
+                and llm_instance.provider_config.get("endpoint_url")
                 else "http://localhost:11434"
             )
 
-            model_name = OLLAMA_MODEL_MAPPING.get(llm_instance.model_name)
-            if not model_name:
-                await manager.send_json(
-                    connection_id,
-                    {
-                        "type": "error",
-                        "message": f"Model '{llm_instance.model_name}' not supported for inference",
-                    },
-                )
+            if provider.lower() == "openrouter":
+                try:
+                    await InferenceCRUD._stream_openrouter(
+                        connection_id=connection_id,
+                        openrouter_url=llm_url,
+                        model_name=llm_instance.model_name,
+                        messages=messages,
+                        max_tokens=request.max_tokens,
+                        temperature=request.temperature,
+                        api_key=config.OPENAI_API_KEY,
+                    )
+                except Exception as e:
+                    logger.error(f"Inference streaming error: {str(e)}")
+                    await manager.send_json(
+                        connection_id,
+                        {"type": "error", "message": "Something went wrong."},
+                    )
                 continue
-            try:
-                await _stream_ollama(
-                    connection_id=connection_id,
-                    ollama_url=llm_url,
-                    model_name=model_name,
-                    messages=messages,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature,
-                )
-            except Exception as e:
-                logger.error(f"Inference streaming error: {str(e)}")
-                await manager.send_json(
-                    connection_id, {"type": "error", "message": "Something went wrong."}
-                )
+            elif provider.lower() == "ollama":
+                model_name = OLLAMA_MODEL_MAPPING.get(llm_instance.model_name)
+                if not model_name:
+                    await manager.send_json(
+                        connection_id,
+                        {
+                            "type": "error",
+                            "message": "Selected does not support for inference.",
+                        },
+                    )
+                    continue
+                try:
+                    await InferenceCRUD._stream_ollama(
+                        connection_id=connection_id,
+                        ollama_url=llm_url,
+                        model_name=model_name,
+                        messages=messages,
+                        max_tokens=request.max_tokens,
+                        temperature=request.temperature,
+                    )
+                except Exception as e:
+                    logger.error(f"Inference streaming error: {str(e)}")
+                    await manager.send_json(
+                        connection_id,
+                        {"type": "error", "message": "Something went wrong."},
+                    )
     except Exception as e:
         logger.error(f"WebSocket error: {str(e)}")
         try:
@@ -163,68 +218,3 @@ async def inference_websocket(
             logger.error(f"Failed to send error message over WebSocket: {str(e)}")
     finally:
         manager.disconnect(connection_id)
-
-
-async def _stream_ollama(
-    connection_id: str,
-    ollama_url: str,
-    model_name: str,
-    messages: list[dict],
-    max_tokens: int,
-    temperature: float,
-):
-    try:
-        async with httpx.AsyncClient(timeout=300.0) as client:
-            async with client.stream(
-                "POST",
-                f"{ollama_url}/api/chat",
-                json={
-                    "model": model_name,
-                    "messages": messages,
-                    "stream": True,
-                    "options": {
-                        "num_predict": max_tokens,
-                        "temperature": temperature,
-                    },
-                },
-            ) as response:
-                if response.status_code != 200:
-                    error_text = await response.aread()
-                    await manager.send_json(
-                        connection_id,
-                        {
-                            "type": "error",
-                            "message": f"Ollama error: {error_text.decode()}",
-                        },
-                    )
-                    return
-
-                async for line in response.aiter_lines():
-                    if not line.strip():
-                        continue
-
-                    try:
-                        data = json.loads(line)
-                        if "message" in data:
-                            content = data["message"].get("content", "")
-                            if content:
-                                await manager.send_json(
-                                    connection_id, {"type": "token", "content": content}
-                                )
-
-                        if data.get("done", False):
-                            await manager.send_json(connection_id, {"type": "done"})
-                            break
-                    except json.JSONDecodeError:
-                        continue
-
-    except httpx.RequestError as e:
-        logger.error(f"Ollama request error: {str(e)}")
-        await manager.send_json(
-            connection_id, {"type": "error", "message": "LLM service is unavailable."}
-        )
-    except Exception as e:
-        logger.error(f"Ollama stream error: {str(e)}")
-        await manager.send_json(
-            connection_id, {"type": "error", "message": "Something went wrong."}
-        )

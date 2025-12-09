@@ -11,27 +11,24 @@ from src.models.user import User, UserToken
 
 def generate_verification_token() -> str:
     """
-    Generate a secure random token for email verification.
+    Generate a secure 32 random bytes converted to URL-safe base64 string token for email verification.
     Returns a URL-safe token string.
     """
-    # Generate 32 random bytes, convert to URL-safe base64 string
     token = secrets.token_urlsafe(32)
     return token
 
 
 async def store_user_token(
-    db: AsyncSession, user_id: int, token: str, function: str, expiry_hours: int = 2
+    db: AsyncSession, user_id: str, token: str, function: str, expiry_hours: int = 2
 ) -> None:
     """
     Store user token in database with expiration.
     Default expiry is 2 hours.
     """
-    # Calculate expiration time
     expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
         hours=expiry_hours
     )
 
-    # Create token record
     db_token = UserToken(
         user_id=user_id,
         token=token,
@@ -67,7 +64,6 @@ async def verify_user_token(
     if not db_token:
         return None
 
-    # Mark token as used
     db_token.used = True
     await db.commit()
 
@@ -94,10 +90,13 @@ async def send_verification_email(user_email: str, token: str, settings: Setting
     try:
         resend.Emails.send(
             {
-                "from": "noreply@yourdomain.com",
+                "from": "noreply@notifications.ephmrl.ai",
                 "to": user_email,
                 "subject": "Verify your email",
-                "html": f"<p>Click <a href='{verification_link}'>here</a> to verify</p>",
+                "html": f"""
+            <p>Click <a href='{verification_link}'>here</a> to verify your email</p>
+            <p>This link expires in 24 hours.</p>
+            """,
             }
         )
     except Exception as e:
@@ -112,7 +111,7 @@ async def send_password_reset_email(user_email: str, token: str, settings: Setti
     try:
         resend.Emails.send(
             {
-                "from": "noreply@yourdomain.com",
+                "from": "noreply@notifications.ephmrl.ai",
                 "to": user_email,
                 "subject": "Reset your password",
                 "html": f"""

@@ -23,9 +23,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  onForgotPassword?: () => void;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, onForgotPassword }: LoginFormProps) {
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
 
@@ -44,9 +45,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         password: values.password,
       });
       onSuccess?.();
-    } catch (error) {
-      console.error("Login error:", error);
-    }
+    } catch (error) {}
   };
 
   return (
@@ -59,7 +58,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
+                <Input type="email" placeholder="name@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -73,6 +72,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             <PasswordInput field={field} label="Password" />
           )}
         />
+
+        {onForgotPassword && (
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Forgot password?
+          </button>
+        )}
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Logging in..." : "Log in"}

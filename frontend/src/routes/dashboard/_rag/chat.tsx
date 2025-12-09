@@ -1,18 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Settings, Bot, User, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Bot, User, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrganizationStore } from "@/hooks/use-organization";
 import { useProjectStore } from "@/hooks/use-project";
 import { usePluginStore } from "@/hooks/use-plugin";
 import { toast } from "sonner";
-import { ChatSettings } from "@/components/chat-settings";
 import apiClient from "@/lib/axios";
+import AI_Prompt, { type AIModel } from "@/components/kokonutui/ai-prompt";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const Route = createFileRoute("/dashboard/_rag/chat")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    if (!org?.id) return { models: [] };
+    return apiClient
+      .get(`/llm/models/my/all?organization_id=${org.id}`)
+      .then((res) => ({ models: res.data }))
+      .catch(() => ({ models: [] }));
+  },
   component: ChatPage,
 });
 
@@ -23,30 +30,30 @@ interface Message {
   timestamp: Date;
 }
 
-interface LLMModel {
-  id: string;
-  name: string;
-  model_name: string;
-  is_dedicated: boolean;
-}
-
 function ChatPage() {
   const { currentOrganization } = useOrganizationStore();
   const { currentProject } = useProjectStore();
-  const { selectedPlugin } = usePluginStore();
+  const { installedPlugins, fetchAndSetInstalledPlugins } = usePluginStore();
+  const { models: preloadedModels } = Route.useLoaderData();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [models, setModels] = useState<LLMModel[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [models, setModels] = useState<AIModel[]>(preloadedModels);
+  const [isLoadingModels, setIsLoadingModels] = useState(
+    preloadedModels.length === 0
+  );
+  const [selectedPlugins, setSelectedPlugins] = useState<string[]>([]);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [chunkLimit, setChunkLimit] = useState(3);
 
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentMessageRef = useRef<string>("");
+  const isNearBottomRef = useRef(true);
 
   const fetchModelsAndConnect = useCallback(async () => {
     if (!currentOrganization) return;
@@ -76,6 +83,10 @@ function ChatPage() {
     setMessages([]);
     fetchModelsAndConnect();
 
+    if (currentOrganization?.id) {
+      fetchAndSetInstalledPlugins(currentOrganization.id);
+    }
+
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -83,8 +94,17 @@ function ChatPage() {
     };
   }, [currentOrganization?.id]);
 
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 100;
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < threshold;
+  }, []);
+
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && isNearBottomRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
@@ -118,23 +138,27 @@ function ChatPage() {
 
         if (data.type === "token") {
           currentMessageRef.current += data.content;
+          const currentContent = currentMessageRef.current;
 
           setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
+            const lastMessage = prev[prev.length - 1];
 
             if (lastMessage && lastMessage.role === "assistant") {
-              lastMessage.content = currentMessageRef.current;
+              return [
+                ...prev.slice(0, -1),
+                { ...lastMessage, content: currentContent },
+              ];
             } else {
-              newMessages.push({
-                id: Date.now().toString(),
-                role: "assistant",
-                content: currentMessageRef.current,
-                timestamp: new Date(),
-              });
+              return [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  role: "assistant",
+                  content: currentContent,
+                  timestamp: new Date(),
+                },
+              ];
             }
-
-            return newMessages;
           });
         } else if (data.type === "done") {
           console.log("Stream complete");
@@ -172,6 +196,14 @@ function ChatPage() {
     setIsConnected(false);
   };
 
+  const handleModelChange = (modelId: string) => {
+    if (modelId === selectedModelId) return;
+
+    disconnectWebSocket();
+    setSelectedModelId(modelId);
+    connectWebSocket(modelId);
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || !isConnected || isStreaming) return;
 
@@ -189,8 +221,10 @@ function ChatPage() {
 
     const payload = {
       prompt: userMessage.content,
-      plugin_slug: selectedPlugin || undefined,
+      plugin_slug: selectedPlugins.length > 0 ? selectedPlugins[0] : undefined,
+      tools: selectedTools.length > 0 ? selectedTools : undefined,
       project_id: currentProject?.id || undefined,
+      plugin_chunks_limit: chunkLimit,
       max_tokens: 2000,
       temperature: 0.7,
     };
@@ -198,68 +232,27 @@ function ChatPage() {
     wsRef.current?.send(JSON.stringify(payload));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const currentModel = models.find((m) => m.id === selectedModelId);
-
   return (
     <div className="flex flex-col h-screen">
-      <div className="border-b p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">AI Chat</h1>
-          <p className="text-sm text-muted-foreground">
-            {currentModel
-              ? `Model: ${currentModel.name}`
-              : isLoadingModels
-                ? "Loading models..."
-                : "No model available"}
-            {selectedPlugin && ` | Plugin: ${selectedPlugin}`}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected
-                  ? "bg-green-500"
-                  : isLoadingModels
-                    ? "bg-yellow-500 animate-pulse"
-                    : "bg-red-500"
-              }`}
-            />
-            <span className="text-sm text-muted-foreground">
-              {isConnected
-                ? "Connected"
-                : isLoadingModels
-                  ? "Connecting..."
-                  : "Disconnected"}
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowSettings(true)}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="border-b p-4">
+        <h1 className="text-2xl font-bold">AI Chat</h1>
+        <p className="text-sm text-muted-foreground">
+          Chat with AI using your connected models
+        </p>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 p-4 overflow-y-auto"
+      >
         <div className="space-y-4 max-w-3xl mx-auto">
           {messages.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Start a conversation with AI</p>
+              <p className="font-medium">Start a conversation</p>
               <p className="text-sm mt-2">
-                {selectedPlugin
-                  ? "RAG is enabled - your documents will be used as context"
-                  : "Select a plugin in settings to enable RAG"}
+                Select a model and optionally enable RAG with a plugin
               </p>
             </div>
           )}
@@ -272,7 +265,7 @@ function ChatPage() {
               }`}
             >
               <Card
-                className={`max-w-[80%] p-4 ${
+                className={`max-w-[80%] p-4 overflow-x-auto ${
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -286,7 +279,15 @@ function ChatPage() {
                     <User className="h-5 w-5 mt-0.5 shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    {message.role === "assistant" ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                    )}
                     <p className="text-xs opacity-70 mt-2">
                       {message.timestamp.toLocaleTimeString()}
                     </p>
@@ -307,50 +308,40 @@ function ChatPage() {
 
           <div ref={scrollRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t p-4">
-        <div className="max-w-3xl mx-auto flex space-x-2">
-          <Input
+        <div className="max-w-3xl mx-auto">
+          <AI_Prompt
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onChange={setInput}
+            onSend={() => {
+              sendMessage();
+              setInput("");
+            }}
+            models={models}
+            selectedModelId={selectedModelId}
+            onModelChange={handleModelChange}
+            plugins={installedPlugins}
+            selectedPlugins={selectedPlugins}
+            onPluginChange={setSelectedPlugins}
+            selectedTools={selectedTools}
+            onToolChange={setSelectedTools}
+            chunkLimit={chunkLimit}
+            onChunkLimitChange={setChunkLimit}
+            isConnected={isConnected}
+            isStreaming={isStreaming}
+            isLoadingModels={isLoadingModels}
             placeholder={
               isConnected
                 ? "Type your message..."
-                : "Connect to a model first..."
+                : isLoadingModels
+                  ? "Loading models..."
+                  : "Select a model to connect..."
             }
-            disabled={!isConnected || isStreaming}
-            className="flex-1"
           />
-          <Button
-            onClick={sendMessage}
-            disabled={!input.trim() || !isConnected || isStreaming}
-          >
-            {isStreaming ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       </div>
-
-      <ChatSettings
-        open={showSettings}
-        onOpenChange={setShowSettings}
-        selectedModelId={selectedModelId}
-        onSelectModel={(modelId) => {
-          setSelectedModelId(modelId);
-          if (isConnected) {
-            disconnectWebSocket();
-          }
-          connectWebSocket(modelId);
-          setShowSettings(false);
-        }}
-        isConnected={isConnected}
-        onDisconnect={disconnectWebSocket}
-      />
     </div>
   );
 }

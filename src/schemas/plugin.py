@@ -9,5 +9,5 @@ class InstallPluginRequest(BaseModel):
 
 class PluginResponse(BaseModel):
     plugin_slug: str
-    status: bool
+    status: str
     created_at: datetime.datetime

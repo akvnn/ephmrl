@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { listAllModels, provisionLLMSubinstance } from "@/lib/llm";
 import { ListedLLM } from "@/types/llm";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,12 @@ import { ModelsTable } from "@/components/models/ModelsTable";
 import { DeployDialog } from "@/components/models/DeployDialog";
 
 export const Route = createFileRoute("/dashboard/_llm/models")({
+  loader: () => listAllModels().catch(() => []),
   component: ModelsPage,
 });
 
 function ModelsPage() {
-  const [models, setModels] = useState<ListedLLM[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const models = Route.useLoaderData();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
@@ -26,23 +26,6 @@ function ModelsPage() {
   const [isDeploying, setIsDeploying] = useState(false);
   const { currentOrganization } = useOrganizationStore();
   const pageSize = 12;
-
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        setIsLoading(true);
-        const data = await listAllModels();
-        console.log("Fetched models:", data);
-        setModels(data);
-      } catch (error) {
-        console.error("Failed to fetch models:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchModels();
-  }, []);
 
   const filteredModels = useMemo(() => {
     return models.filter((model) => {
@@ -132,11 +115,7 @@ function ModelsPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-muted-foreground">Loading models...</div>
-          </div>
-        ) : paginatedModels.length === 0 ? (
+        {paginatedModels.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
             <div className="text-center">
               <p className="text-muted-foreground">No models found</p>

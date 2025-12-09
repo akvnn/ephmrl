@@ -32,7 +32,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_user_tokens_function'), 'user_tokens', ['function'], unique=True)
+    op.create_index(op.f('ix_user_tokens_function'), 'user_tokens', ['function'], unique=False)
     op.create_index(op.f('ix_user_tokens_id'), 'user_tokens', ['id'], unique=False)
     op.create_index(op.f('ix_user_tokens_token'), 'user_tokens', ['token'], unique=True)
     # ### end Alembic commands ###

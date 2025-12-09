@@ -2,15 +2,28 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveRadar } from "@nivo/radar";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { useOrganizationStore } from "@/hooks/use-organization";
 import { listLLMSubinstances } from "@/lib/llm";
 import { projectService } from "@/lib/project";
-import { useState, useEffect, useMemo } from "react";
-import { LLMSubinstance } from "@/types/llm";
-import { Project } from "@/types/project";
+import { getDocumentCount } from "@/lib/document";
+import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/dashboard/metrics")({
+  loader: ({ context }) => {
+    const org = context.getOrganization();
+    if (!org?.id) return { llmSubinstances: [], projects: [], documentCount: 0 };
+    return Promise.all([
+      listLLMSubinstances({ organization_id: org.id }),
+      projectService.fetchProjectsByOrganization(org.id),
+      getDocumentCount(org.id),
+    ])
+      .then(([llmSubinstances, projects, documentCount]) => ({
+        llmSubinstances,
+        projects,
+        documentCount,
+      }))
+      .catch(() => ({ llmSubinstances: [], projects: [], documentCount: 0 }));
+  },
   component: DashboardPage,
 });
 
@@ -46,12 +59,9 @@ function formatTimeAgo(date: Date): string {
 }
 
 function DashboardPage() {
-  const { currentOrganization } = useOrganizationStore();
+  const { llmSubinstances, projects, documentCount } = Route.useLoaderData();
   const { resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme === "dark";
-  const [llmSubinstances, setLlmSubinstances] = useState<LLMSubinstance[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const chartTheme = useMemo(
     () => ({
@@ -76,33 +86,6 @@ function DashboardPage() {
     }),
     [isDark]
   );
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!currentOrganization?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const [subinstances, projectsData] = await Promise.all([
-          listLLMSubinstances({
-            organization_id: currentOrganization.id,
-          }),
-          projectService.fetchProjectsByOrganization(currentOrganization.id),
-        ]);
-        setLlmSubinstances(subinstances);
-        setProjects(projectsData);
-      } catch (error) {
-        console.error("Failed to fetch metrics data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentOrganization?.id]);
 
   const deploymentRadarData = useMemo(() => {
     const nameCount = new Map<string, number>();
@@ -217,90 +200,70 @@ function DashboardPage() {
   }, [llmSubinstances, projects]);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="px-4 pb-4">
-        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-4">
+      <div className="px-0 sm:px-4 pb-4">
+        <div className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="LLM Deployments"
-            value={isLoading ? "..." : llmSubinstances.length}
+            value={llmSubinstances.length}
           />
-          <StatCard
-            title="Unique Models"
-            value={isLoading ? "..." : uniqueModels}
-          />
-          <StatCard
-            title="Active Projects"
-            value={isLoading ? "..." : projects.length}
-          />
-          <StatCard
-            title="Documents"
-            value="Coming Soon"
-            subtitle="Endpoint in development"
-          />
+          <StatCard title="Unique Models" value={uniqueModels} />
+          <StatCard title="Active Projects" value={projects.length} />
+          <StatCard title="Documents" value={documentCount} />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Model Provisioning (Last 7 Days)
             </h3>
-            <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                <ResponsiveLine
-                  data={provisioningActivityData}
-                  margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: 0,
-                    max: "auto",
-                  }}
-                  curve="monotoneX"
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  pointSize={8}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  enablePointLabel={false}
-                  useMesh={true}
-                  theme={chartTheme}
-                  colors={[chartColors.primary]}
-                  enableArea={true}
-                  areaOpacity={0.1}
-                />
-              )}
+            <div className="h-[250px] sm:h-[300px]">
+              <ResponsiveLine
+                data={provisioningActivityData}
+                margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                xScale={{ type: "point" }}
+                yScale={{
+                  type: "linear",
+                  min: 0,
+                  max: "auto",
+                }}
+                curve="monotoneX"
+                axisBottom={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                pointSize={8}
+                pointColor={{ theme: "background" }}
+                pointBorderWidth={2}
+                pointBorderColor={{ from: "serieColor" }}
+                enablePointLabel={false}
+                useMesh={true}
+                theme={chartTheme}
+                colors={[chartColors.primary]}
+                enableArea={true}
+                areaOpacity={0.1}
+              />
             </div>
           </div>
 
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Top Deployments by Name
             </h3>
-            <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : deploymentRadarData.length > 0 ? (
+            <div className="h-[250px] sm:h-[300px]">
+              {deploymentRadarData.length > 0 ? (
                 <ResponsiveRadar
                   data={deploymentRadarData}
                   keys={["count"]}
                   indexBy="deployment"
                   maxValue="auto"
-                  margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
+                  margin={{ top: 30, right: 50, bottom: 30, left: 50 }}
                   curve="linearClosed"
                   borderWidth={2}
                   borderColor={{ from: "color" }}
@@ -325,18 +288,13 @@ function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">
+          <div className="rounded-lg border p-4 sm:p-6 shadow-sm">
+            <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
               Projects Created (Last 7 Days)
             </h3>
-            <div className="h-[300px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                <ResponsiveLine
-                  data={projectActivityData}
+            <div className="h-[250px] sm:h-[300px]">
+              <ResponsiveLine
+                data={projectActivityData}
                   margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
                   xScale={{ type: "point" }}
                   yScale={{
@@ -365,30 +323,25 @@ function DashboardPage() {
                   colors={[chartColors.chart2]}
                   enableArea={true}
                   areaOpacity={0.1}
-                />
-              )}
+              />
             </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
-          <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">
-                Loading activity...
-              </div>
-            ) : recentActivity.length > 0 ? (
+        <div className="mt-4 sm:mt-6 rounded-lg border p-4 sm:p-6 shadow-sm">
+          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Recent Activity</h3>
+          <div className="space-y-2 sm:space-y-3">
+            {recentActivity.length > 0 ? (
               recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-sm">
-                  <span className="text-muted-foreground">
+                <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm">
+                  <span className="text-muted-foreground whitespace-nowrap">
                     {activity.timeAgo}
                   </span>
-                  <span>{activity.description}</span>
+                  <span className="break-words">{activity.description}</span>
                 </div>
               ))
             ) : (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 No recent activity
               </div>
             )}

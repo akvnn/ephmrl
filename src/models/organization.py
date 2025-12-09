@@ -46,7 +46,7 @@ class Organization(Base):
 
     # Credits
     credits_balance = Column(
-        Integer, default=0, nullable=False
+        Integer, default=20, nullable=False
     )  # Current available credits
     credits_used_this_period = Column(
         Integer, default=0, nullable=False

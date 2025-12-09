@@ -39,86 +39,200 @@ def upgrade() -> None:
         sa.column('model_name', sa.String),
         sa.column('model_type', sa.String),
         sa.column('base_config', JSONB), 
+        sa.column('provider_config', JSONB),
         sa.column('status', sa.String),
         sa.column('maximum_tenants', sa.Integer),
         sa.column('listed_llm_id', UUID(as_uuid=True)),
     )
-
-    # Generate UUIDs for listed LLMs
-    llama4_id = uuid4()
-    mistral_id = uuid4()
-
+    model_ids = {
+        'Mistral Large 3 2512': uuid4(),
+        'DeepSeek V3.2': uuid4(),
+        'GPT-OSS 120B': uuid4(),
+        'GPT-OSS 20B': uuid4(),
+        'Meta: Llama 3 8B Instruct': uuid4(),
+        'MoonshotAI: Kimi K2 Thinking': uuid4(),
+    }
     # Seed ListedLLM data
     op.bulk_insert(listed_llm_table, [
         {
-            'id': llama4_id,
-            'name': 'Llama 4 8B',
-            'description': 'Meta\'s Llama 4 8B model - efficient and powerful for general tasks',
-            'model_name': 'meta-llama/Llama-4-8B-Instruct',
-            'slug': 'llama-4-8b',
-            'image_location': 'vllm/vllm-openai:latest',
+            'id': model_ids['Mistral Large 3 2512'],
+            'name': 'Mistral Large 3 2512',
+            'description': 'Mistral Large 3 2512 is Mistrals most capable model to date, featuring a sparse mixture-of-experts architecture with 675B total parameters (675B total).',
+            'model_name': 'mistralai/mistral-large-2512',
+            'slug': 'mistral-large-2512',
+            'image_location': 'unavailable',
             'base_config': {
-                'parameters': '8B',
-                'temperature': 0.7,
-                'top_p': 0.9,
-                'max_tokens': 2048,
-                'presence_penalty': 0.0,
-                'frequency_penalty': 0.0
+                'parameters': '675B',
+                'active_parameters': '41B'
             },
             'status': 'live',
         },
         {
-            'id': mistral_id,
-            'name': 'Mistral 7B Instruct',
-            'description': 'Mistral AI\'s 7B instruction-tuned model - fast and accurate',
-            'model_name': 'mistralai/Mistral-7B-Instruct-v0.3',
-            'slug': 'mistral-7b-instruct',
-            'image_location': 'vllm/vllm-openai:latest',
+            'id': model_ids['DeepSeek V3.2'],
+            'name': 'DeepSeek V3.2',
+            'description': 'DeepSeek V3.2 is an advanced language model with improved reasoning and coding capabilities.',
+            'model_name': 'deepseek/deepseek-v3.2',
+            'slug': 'deepseek-v3-2',
+            'image_location': 'unavailable',
             'base_config': {
-                'parameters': '7B',
-                'temperature': 0.7,
-                'top_p': 0.95,
-                'max_tokens': 4096,
-                'presence_penalty': 0.0,
-                'frequency_penalty': 0.0
+                'parameters': '685B'
             },
             'status': 'live',
         },
+        {
+            'id': model_ids['GPT-OSS 120B'],
+            'name': 'GPT-OSS 120B',
+            'description': 'GPT-OSS 120B is a large open-source language model developed by OpenAI optimized for general-purpose tasks.',
+            'model_name': 'openai/gpt-oss-120b',
+            'slug': 'gpt-oss-120b',
+            'image_location': 'unavailable',
+            'base_config': {
+                'parameters': '120B'
+            },
+            'status': 'live',
+        },
+        {
+            'id': model_ids['GPT-OSS 20B'],
+            'name': 'GPT-OSS 20B',
+            'description': 'GPT-OSS 20B is a lightweight open-source language model developed by OpenAI suitable for resource-constrained environments.',
+            'model_name': 'openai/gpt-oss-20b',
+            'slug': 'gpt-oss-20b',
+            'image_location': 'unavailable',
+            'base_config': {
+                'parameters': '20B'
+            },
+            'status': 'live',
+        },
+        {
+            'id': model_ids['Meta: Llama 3 8B Instruct'],
+            'name': 'Meta: Llama 3 8B Instruct',
+            'description': 'Meta: Llama 3 8B Instruct is a powerful language model designed for instruction-following tasks.',
+            'model_name': 'meta-llama/llama-3-8b-instruct',
+            'slug': 'llama-3-8b-instruct',
+            'image_location': 'unavailable',
+            'base_config': {
+                'parameters': '8B'
+            },
+            'status': 'live',
+        },
+        {
+            'id': model_ids['MoonshotAI: Kimi K2 Thinking'],
+            'name': 'MoonshotAI: Kimi K2 Thinking',
+            'description': 'MoonshotAI: Kimi K2 Thinking is an innovative model designed for advanced reasoning and decision-making tasks.',
+            'model_name': 'moonshotai/kimi-k2-thinking',
+            'slug': 'kimi-k2-thinking',
+            'image_location': 'unavailable',
+            'base_config': {
+                'parameters': '1000B',
+                'active_parameters': '41B'
+            },
+            'status': 'live',
+        }
     ])
 
     # Seed LLMInstance data
     op.bulk_insert(llm_instance_table, [
         {
             'id': uuid4(),
-            'name': 'Llama 4 8B - Primary Instance',
-            'model_name': 'meta-llama/Llama-4-8B-Instruct',
+            'name': 'Mistral Large 3 2512 - Primary Instance',
+            'model_name': 'mistralai/mistral-large-2512',
             'model_type': 'chat',
             'base_config': {
                 'temperature': 0.7,
-                'top_p': 0.9,
-                'max_tokens': 2048,
-                'gpu_memory_utilization': 0.9,
-                'tensor_parallel_size': 1
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
             },
             'status': 'active',
-            'maximum_tenants': 10,
-            'listed_llm_id': llama4_id,
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['Mistral Large 3 2512'],
         },
         {
             'id': uuid4(),
-            'name': 'Mistral 7B - Primary Instance',
-            'model_name': 'mistralai/Mistral-7B-Instruct-v0.3',
+            'name': 'DeepSeek V3.2 - Primary Instance',
+            'model_name': 'deepseek/deepseek-v3.2',
             'model_type': 'chat',
             'base_config': {
                 'temperature': 0.7,
-                'top_p': 0.95,
-                'max_tokens': 4096,
-                'gpu_memory_utilization': 0.85,
-                'tensor_parallel_size': 1
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
             },
             'status': 'active',
-            'maximum_tenants': 15,
-            'listed_llm_id': mistral_id,
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['DeepSeek V3.2'],
+        },
+        {
+            'id': uuid4(),
+            'name': 'GPT-OSS 120B - Primary Instance',
+            'model_name': 'openai/gpt-oss-120b',
+            'model_type': 'chat',
+            'base_config': {
+                'temperature': 0.7,
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
+            },
+            'status': 'active',
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['GPT-OSS 120B'],
+        },
+        {
+            'id': uuid4(),
+            'name': 'GPT-OSS 20B - Primary Instance',
+            'model_name': 'openai/gpt-oss-20b',
+            'model_type': 'chat',
+            'base_config': {
+                'temperature': 0.7,
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
+            },
+            'status': 'active',
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['GPT-OSS 20B'],
+        },
+        {
+            'id': uuid4(),
+            'name': 'Meta: Llama 3 8B Instruct - Primary Instance',
+            'model_name': 'meta-llama/llama-3-8b-instruct',
+            'model_type': 'chat',
+            'base_config': {
+                'temperature': 0.7,
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
+            },
+            'status': 'active',
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['Meta: Llama 3 8B Instruct'],
+        },
+        {
+            'id': uuid4(),
+            'name': 'MoonshotAI: Kimi K2 Thinking - Primary Instance',
+            'model_name': 'moonshotai/kimi-k2-thinking',
+            'model_type': 'chat',
+            'base_config': {
+                'temperature': 0.7,
+                'top_p': 0.95
+            },
+            'provider_config':{
+                'provider': 'openrouter',
+                'endpoint_url': 'https://openrouter.ai/api/v1'
+            },
+            'status': 'active',
+            'maximum_tenants': 100,
+            'listed_llm_id': model_ids['MoonshotAI: Kimi K2 Thinking'],
         },
     ])
 
@@ -126,5 +240,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # Delete seeded data
-    op.execute("DELETE FROM llm_instances WHERE model_name IN ('meta-llama/Llama-4-8B-Instruct', 'mistralai/Mistral-7B-Instruct-v0.3')")
-    op.execute("DELETE FROM listed_llms WHERE slug IN ('llama-4-8b', 'mistral-7b-instruct')")
+    op.execute("DELETE FROM llm_instances WHERE name IN ('Mistral Large 3 2512 - Primary Instance', 'DeepSeek V3.2 - Primary Instance', 'GPT-OSS 120B - Primary Instance', 'GPT-OSS 20B - Primary Instance', 'Meta: Llama 3 8B Instruct - Primary Instance', 'MoonshotAI: Kimi K2 Thinking - Primary Instance')")
+    op.execute("DELETE FROM listed_llms WHERE slug IN ('mistral-large-2512', 'deepseek-v3-2', 'gpt-oss-120b', 'gpt-oss-20b', 'llama-3-8b-instruct', 'kimi-k2-thinking')")

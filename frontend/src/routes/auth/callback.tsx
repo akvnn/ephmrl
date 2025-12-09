@@ -2,7 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import axios from "axios";
+import apiClient from "@/lib/axios";
+import { useAuthStore } from "@/hooks/use-auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth/callback")({
   component: RouteComponent,
@@ -18,7 +28,7 @@ function RouteComponent() {
       if (isLoading) return;
 
       if (!isAuthenticated || !user) {
-        setError("Authentication failed");
+        setError("Authentication failed. Please try again.");
         return;
       }
 
@@ -31,15 +41,9 @@ function RouteComponent() {
           auth_provider: "auth0",
         };
 
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-        const response = await axios.post(
-          `${API_URL}/auth/oauth/callback`,
-          auth0Data
-        );
+        await apiClient.post("/auth/oauth/callback", auth0Data);
 
-        localStorage.setItem("access_token", response.data.access_token);
-        localStorage.setItem("refresh_token", response.data.refresh_token);
-
+        await useAuthStore.getState().initializeUserContext();
         navigate({ to: "/dashboard/metrics" });
       } catch (err: any) {
         console.error("Callback error:", err);
@@ -54,18 +58,72 @@ function RouteComponent() {
 
   if (error) {
     return (
-      <div>
-        <h1>Authentication Error</h1>
-        <p style={{ color: "red" }}>{error}</p>
-        <button onClick={() => navigate({ to: "/" })}>Return Home</button>
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl">Authentication Error</CardTitle>
+            <CardDescription>
+              Something went wrong during sign in
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-sm text-muted-foreground text-center">
+                {error}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate({ to: "/auth" })}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Completing authentication...</h1>
-      <p>Please wait while we log you in.</p>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+          <CardTitle className="text-2xl">Completing Sign In</CardTitle>
+          <CardDescription>
+            Please wait while we set up your session
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm text-muted-foreground">
+                Verifying your identity
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-primary/50 animate-pulse delay-150" />
+              <span className="text-sm text-muted-foreground">
+                Setting up your account
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-primary/30 animate-pulse delay-300" />
+              <span className="text-sm text-muted-foreground">
+                Redirecting to dashboard
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

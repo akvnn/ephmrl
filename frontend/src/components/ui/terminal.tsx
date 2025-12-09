@@ -11,6 +11,8 @@ import { motion, MotionProps, useInView } from "motion/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { cn } from "@/lib/utils";
 import dark from "react-syntax-highlighter/dist/esm/styles/prism/dark";
+import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
+import { useThemeStore } from "@/hooks/use-theme";
 
 interface SequenceContextValue {
   completeItem: (index: number) => void;
@@ -100,6 +102,8 @@ export const TypingAnimation = ({
     throw new Error("TypingAnimation: children must be a string. Received:");
   }
 
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+
   const MotionComponent = useMemo(
     () =>
       motion.create(Component, {
@@ -178,7 +182,7 @@ export const TypingAnimation = ({
       <SyntaxHighlighter
         language="python"
         customStyle={{ background: "transparent", border: "none", padding: 0 }}
-        style={dark}
+        style={resolvedTheme === "dark" ? dark : oneLight}
       >
         {displayedText}
       </SyntaxHighlighter>

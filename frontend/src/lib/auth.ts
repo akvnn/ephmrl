@@ -16,6 +16,15 @@ export interface AuthResponse {
   message: string;
 }
 
+export interface PasswordResetRequestData {
+  email: string;
+}
+
+export interface PasswordResetConfirmData {
+  token: string;
+  new_password: string;
+}
+
 export const authService = {
   async signup(data: SignupData): Promise<User> {
     const response = await apiClient.post<User>("/auth/signup", data);
@@ -39,6 +48,23 @@ export const authService = {
 
   async logout(): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>("/auth/logout");
+    return response.data;
+  },
+
+  async requestPasswordReset(data: PasswordResetRequestData): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>("/user/password/reset-request", data);
+    return response.data;
+  },
+
+  async confirmPasswordReset(data: PasswordResetConfirmData): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>("/user/password/reset-confirm", data);
+    return response.data;
+  },
+
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    const response = await apiClient.get<AuthResponse>("/user/verify", {
+      params: { token },
+    });
     return response.data;
   },
 };

@@ -12,4 +12,7 @@ class InferenceRequest(BaseModel):
     max_tokens: int = Field(
         2000, ge=1, le=32000, description="Maximum tokens to generate"
     )
+    plugin_chunks_limit: int = Field(
+        3, ge=1, le=10, description="Number of chunks to retrieve"
+    )
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
