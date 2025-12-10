@@ -2,12 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 
 export interface RuntimeConfig {
   apiUrl: string;
+  auth0Domain: string;
+  auth0ClientId: string;
 }
 
 export const getRuntimeConfig = createServerFn({ method: "GET" }).handler(
   (): RuntimeConfig => {
     return {
       apiUrl: process.env.API_URL || "http://localhost:8000",
+      auth0Domain: process.env.AUTH0_DOMAIN || "",
+      auth0ClientId: process.env.AUTH0_CLIENT_ID || "",
     };
   }
 );

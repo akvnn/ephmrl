@@ -112,10 +112,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Auth0Provider
-          domain={import.meta.env.VITE_AUTH0_DOMAIN}
-          clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+          domain={config?.auth0Domain || ""}
+          clientId={config?.auth0ClientId || ""}
           authorizationParams={{
-            redirect_uri: "http://localhost:3000/auth/callback",
+            redirect_uri:
+              typeof window !== "undefined"
+                ? window.location.origin + "/auth/callback"
+                : "",
           }}
         >
           {children}
