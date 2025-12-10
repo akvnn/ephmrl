@@ -110,6 +110,17 @@ function ChatPage() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (installedPlugins.length > 0 && selectedPlugins.length === 0) {
+      const enabledPlugins = installedPlugins
+        .filter((p) => p.enabled)
+        .map((p) => p.plugin_slug);
+      if (enabledPlugins.length > 0) {
+        setSelectedPlugins(enabledPlugins);
+      }
+    }
+  }, [installedPlugins]);
+
   const connectWebSocket = (modelId: string) => {
     if (!currentOrganization) {
       toast.error("Please select an organization");
