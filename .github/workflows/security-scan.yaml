@@ -78,23 +78,15 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-      
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-      
-      - name: Run Trivy for readable report
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
           format: 'json'
           output: 'trivy-report.json'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## Trivy Security Scan" >> $GITHUB_STEP_SUMMARY
+          jq -r '.Results[]? | select(.Vulnerabilities) | .Vulnerabilities[] | "- **\(.Severity)**: \(.VulnerabilityID) in \(.PkgName)@\(.InstalledVersion)"' trivy-report.json >> $GITHUB_STEP_SUMMARY || echo "No vulnerabilities found" >> $GITHUB_STEP_SUMMARY
       
       - name: Upload Trivy report
         uses: actions/upload-artifact@v4
