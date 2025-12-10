@@ -43,6 +43,7 @@ function RouteComponent() {
 
         await apiClient.post("/auth/oauth/callback", auth0Data);
 
+        useAuthStore.setState({ isInitialized: false });
         await useAuthStore.getState().initializeUserContext();
         navigate({ to: "/dashboard/metrics" });
       } catch (err: any) {
