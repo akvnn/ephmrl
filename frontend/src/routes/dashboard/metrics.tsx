@@ -7,18 +7,17 @@ import { projectService } from "@/lib/project";
 import { getDocumentCount } from "@/lib/document";
 import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
-import { usePluginStore } from "@/hooks/use-plugin";
 
 export const Route = createFileRoute("/dashboard/metrics")({
   loader: ({ context }) => {
     const org = context.getOrganization();
-    if (!org?.id) return { llmSubinstances: [], projects: [], documentCount: 0 };
+    if (!org?.id)
+      return { llmSubinstances: [], projects: [], documentCount: 0 };
 
-    const pluginSlug = usePluginStore.getState().selectedPlugin;
-
-    const documentCountPromise = pluginSlug
-      ? getDocumentCount(pluginSlug, org.id)
-      : Promise.resolve(0);
+    const documentCountPromise = getDocumentCount(
+      "document-intelligence",
+      org.id
+    );
 
     return Promise.all([
       listLLMSubinstances({ organization_id: org.id }),
@@ -172,11 +171,7 @@ function DashboardPage() {
   }, [projects]);
 
   const uniqueModels = useMemo(() => {
-    const models = new Set(
-      llmSubinstances
-        .map((s) => s.llm_instance?.listed_llm?.name)
-        .filter(Boolean)
-    );
+    const models = new Set(llmSubinstances.map((s) => s.name));
     return models.size;
   }, [llmSubinstances]);
 
@@ -186,7 +181,7 @@ function DashboardPage() {
     llmSubinstances.forEach((sub) => {
       activities.push({
         time: new Date(sub.created_at),
-        description: `Deployed ${sub.llm_instance?.listed_llm?.name || "model"} (${sub.is_dedicated ? "Dedicated" : "Shared"})`,
+        description: `Deployed ${sub.name} (${sub.is_dedicated ? "Dedicated" : "Shared"})`,
       });
     });
 
@@ -211,10 +206,7 @@ function DashboardPage() {
     <div className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-4">
       <div className="px-0 sm:px-4 pb-4">
         <div className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="LLM Deployments"
-            value={llmSubinstances.length}
-          />
+          <StatCard title="LLM Deployments" value={llmSubinstances.length} />
           <StatCard title="Unique Models" value={uniqueModels} />
           <StatCard title="Active Projects" value={projects.length} />
           <StatCard title="Documents" value={documentCount} />
@@ -303,49 +295,56 @@ function DashboardPage() {
             <div className="h-[250px] sm:h-[300px]">
               <ResponsiveLine
                 data={projectActivityData}
-                  margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: 0,
-                    max: "auto",
-                  }}
-                  curve="monotoneX"
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  pointSize={8}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  enablePointLabel={false}
-                  useMesh={true}
-                  theme={chartTheme}
-                  colors={[chartColors.chart2]}
-                  enableArea={true}
-                  areaOpacity={0.1}
+                margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                xScale={{ type: "point" }}
+                yScale={{
+                  type: "linear",
+                  min: 0,
+                  max: "auto",
+                }}
+                curve="monotoneX"
+                axisBottom={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                pointSize={8}
+                pointColor={{ theme: "background" }}
+                pointBorderWidth={2}
+                pointBorderColor={{ from: "serieColor" }}
+                enablePointLabel={false}
+                useMesh={true}
+                theme={chartTheme}
+                colors={[chartColors.chart2]}
+                enableArea={true}
+                areaOpacity={0.1}
               />
             </div>
           </div>
         </div>
 
         <div className="mt-4 sm:mt-6 rounded-lg border p-4 sm:p-6 shadow-sm">
-          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">Recent Activity</h3>
+          <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold">
+            Recent Activity
+          </h3>
           <div className="space-y-2 sm:space-y-3">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm">
+                <div
+                  key={idx}
+                  className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm"
+                >
                   <span className="text-muted-foreground whitespace-nowrap">
                     {activity.timeAgo}
                   </span>
-                  <span className="break-words">{activity.description}</span>
+                  <span className="wrap-break-words">
+                    {activity.description}
+                  </span>
                 </div>
               ))
             ) : (

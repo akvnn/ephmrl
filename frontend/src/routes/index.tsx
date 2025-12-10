@@ -97,7 +97,7 @@ function App() {
 
   const handleGetStarted = () => {
     if (user) {
-      navigate({ to: "/dashboard/metrics" });
+      navigate({ to: "/dashboard/deployed" });
     } else {
       navigate({ to: "/auth" });
     }
@@ -187,7 +187,10 @@ function App() {
         </div>
       </section>
 
-      <section id="features" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section
+        id="features"
+        className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto"
+      >
         <div className="text-center mb-12 sm:mb-16 lg:mb-20 space-y-3 sm:space-y-4">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground font-inter tracking-tight">
             Why Choose Ephmrl
@@ -209,7 +212,10 @@ function App() {
         </div>
       </section>
 
-      <section id="privacy" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section
+        id="privacy"
+        className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           <div className="relative order-2 lg:order-1">
             <div className="relative bg-linear-to-br from-muted/50 to-background border border-border rounded-2xl p-6 sm:p-8 lg:p-12 shadow-2xl">
@@ -298,7 +304,10 @@ function App() {
         </div>
       </section>
 
-      <section id="demo" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section
+        id="demo"
+        className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-7xl mx-auto"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           <div className="space-y-4 sm:space-y-6">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight">
@@ -333,7 +342,10 @@ function App() {
         </div>
       </section>
 
-      <section id="pricing" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-5xl mx-auto">
+      <section
+        id="pricing"
+        className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 max-w-5xl mx-auto"
+      >
         <div className="text-center mb-10 sm:mb-12 lg:mb-16 space-y-3 sm:space-y-4">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
             Simple Pricing

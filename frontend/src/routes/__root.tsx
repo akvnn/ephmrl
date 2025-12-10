@@ -16,7 +16,7 @@ import type { Project } from "@/types/project";
 export interface RouterContext {
   getOrganization: () => Organization | null;
   getProject: () => Project | null;
-  config: RuntimeConfig;
+  config?: RuntimeConfig;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -69,6 +69,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    useAuthStore.persist.rehydrate();
     useAuthStore.getState().initializeUserContext();
     useThemeStore.getState().initializeTheme();
   }, []);

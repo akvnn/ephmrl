@@ -11,7 +11,7 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
-    defaultPreloadStaleTime: 3000,
+    defaultPreloadStaleTime: 1000 * 60 * 5,
     defaultPreload: "viewport",
     context: {
       getOrganization: () =>

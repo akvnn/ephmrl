@@ -36,10 +36,7 @@ export function DeploymentsTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Model</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Cost/Hour</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -49,36 +46,12 @@ export function DeploymentsTable({
             <TableRow key={deployment.id}>
               <TableCell className="font-medium">{deployment.name}</TableCell>
               <TableCell>
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm">
-                    {deployment.llm_instance?.listed_llm?.name ||
-                      deployment.llm_instance?.name ||
-                      "Unknown"}
-                  </span>
-                  <code className="text-xs text-muted-foreground">
-                    {deployment.llm_instance?.model_name || "N/A"}
-                  </code>
-                </div>
-              </TableCell>
-              <TableCell>
                 <Badge
                   variant={deployment.is_dedicated ? "default" : "secondary"}
                 >
                   {deployment.is_dedicated ? "Dedicated" : "Shared"}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    deployment.llm_instance?.status === "active"
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {deployment.llm_instance?.status || "Unknown"}
-                </Badge>
-              </TableCell>
-              <TableCell>{deployment.credit_price_per_hour} credits</TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(deployment.created_at)}
               </TableCell>

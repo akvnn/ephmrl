@@ -40,16 +40,9 @@ export function DeprovisionDialog({
           <div className="rounded-lg border p-4 text-sm">
             <div className="mb-2 font-medium">Deployment Details</div>
             <div className="space-y-1 text-muted-foreground">
-              <div>
-                Model:{" "}
-                {selectedDeployment.llm_instance?.listed_llm?.name ||
-                  "Unknown"}
-              </div>
+              <div>Name: {selectedDeployment.name}</div>
               <div>
                 Type: {selectedDeployment.is_dedicated ? "Dedicated" : "Shared"}
-              </div>
-              <div>
-                Cost: {selectedDeployment.credit_price_per_hour} credits/hour
               </div>
             </div>
           </div>
