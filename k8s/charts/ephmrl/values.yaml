@@ -104,11 +104,10 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # ConfigMap environment variables
-configMapEnv:
-  - VITE_API_URL: "http://chart-example.local/api"
+configMapEnv: {}
 
 # Secret environment variables
-secretEnv: []
+secretEnv: {}
 
 # Additional volumes on the output Deployment definition.
 volumes: []

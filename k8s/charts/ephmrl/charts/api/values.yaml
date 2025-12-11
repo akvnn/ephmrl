@@ -114,10 +114,10 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # ConfigMap environment variables
-configMapEnv: []
+configMapEnv: {}
 
 # Secret environment variables
-secretEnv: []
+secretEnv: {}
 
 # Additional volumes on the output Deployment definition.
 volumes: []
