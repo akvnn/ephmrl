@@ -99,6 +99,7 @@ export const useProjectStore = create<ProjectStore>()(
       partialize: (state) => ({
         currentProjectId: state.currentProject?.id || null,
       }),
+      skipHydration: true,
     }
   )
 );

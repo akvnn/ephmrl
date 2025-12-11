@@ -17,7 +17,13 @@ import { PasswordInput } from "./PasswordInput";
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   full_name: z.string().min(2, "Name must be at least 2 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be at most 128 characters")
+    .refine((v) => /[A-Z]/.test(v), "Password must contain at least one uppercase letter")
+    .refine((v) => /[a-z]/.test(v), "Password must contain at least one lowercase letter")
+    .refine((v) => /[0-9]/.test(v), "Password must contain at least one digit"),
   confirmPassword: z.string(),
 });
 

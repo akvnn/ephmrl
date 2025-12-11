@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { Menu, X } from "lucide-react";
+import { useAuthStore } from "@/hooks/use-auth";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   const navLinks = [
     { href: "#features", label: "Features" },
@@ -28,6 +30,12 @@ export default function Header() {
                   {link.label}
                 </a>
               ))}
+              <a
+                href="/dashboard/deployed"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-inter font-medium"
+              >
+                {isAuthenticated ? "Dashboard" : "Sign In"}
+              </a>
             </div>
 
             <button
@@ -56,6 +64,13 @@ export default function Header() {
                     {link.label}
                   </a>
                 ))}
+                <a
+                  href="/dashboard/deployed"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-inter font-medium text-center mt-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isAuthenticated ? "Dashboard" : "Sign In"}
+                </a>
               </div>
             </div>
           )}

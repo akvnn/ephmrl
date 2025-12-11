@@ -325,8 +325,21 @@ async def create_or_update_user_from_auth0(
     db.add(db_user)
     await db.flush()
 
-    org_name = f"{db_user.username}'s Organization"
-    org_slug = f"{db_user.username}-{str(db_user.id)[:6]}".lower()
+    name_parts = (
+        db_user.full_name.strip().split() if db_user.full_name else [db_user.username]
+    )
+    display_name = (
+        name_parts[0]
+        if db_user.full_name and len(db_user.full_name) > 20
+        else (db_user.full_name or db_user.username)
+    )
+
+    org_name = f"{display_name}'s Organization"
+
+    slug_base = re.sub(r"[^\w\s-]", "", display_name)
+    slug_base = re.sub(r"[-\s]+", "-", slug_base).strip("-").lower()
+
+    org_slug = f"{slug_base}-{str(db_user.id)[:6]}"
 
     await create_organization(
         db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False

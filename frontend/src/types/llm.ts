@@ -24,15 +24,9 @@ export interface LLMInstance {
 export interface LLMSubinstance {
   id: string;
   org_id: string;
-  llm_instance_id: string;
-  user_id?: string;
   name: string;
-  base_config: Record<string, any>;
-  credit_price_per_hour: number;
-  created_at: string;
-  deleted_at?: string;
   is_dedicated: boolean;
-  llm_instance?: LLMInstance;
+  created_at: string;
 }
 
 export interface LLMSubinstanceCreate {

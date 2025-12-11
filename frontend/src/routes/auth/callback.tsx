@@ -45,7 +45,7 @@ function RouteComponent() {
 
         useAuthStore.setState({ isInitialized: false });
         await useAuthStore.getState().initializeUserContext();
-        navigate({ to: "/dashboard/metrics" });
+        navigate({ to: "/dashboard/deployed" });
       } catch (err: any) {
         console.error("Callback error:", err);
         setError(
