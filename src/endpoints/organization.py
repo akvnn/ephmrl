@@ -15,7 +15,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.security import UnauthorizedException
 from src.utils import generate_slug_suffix, get_current_user_from_cookie
-from src.crud.organization import OrganizationCRUD, validate_user_permission_global
+from src.crud.organization import OrganizationCRUD
 
 router = APIRouter(prefix="/organization", tags=["organization"])
 
@@ -75,12 +75,10 @@ async def create_org(
 ):
     """Create a new organization"""
     try:
-        has_perm = await validate_user_permission_global(
-            db, user.id, "organization.create"
-        )
+        has_perm = await OrganizationCRUD.can_user_create_org(db, user.id)
         if not has_perm:
             raise UnauthorizedException(
-                "Your plan does not allow you to create organizations. Please upgrade your plan to do so."
+                "You must be an owner of an organization with an active plan that allows creating additional organizations."
             )
 
         slug = f"{org_data.name}-{generate_slug_suffix()}"
