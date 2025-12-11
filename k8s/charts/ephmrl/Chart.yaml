@@ -2,9 +2,9 @@ apiVersion: v2
 name: ephmrl
 description: A Helm chart for ephmrl
 type: application
-version: 0.0.6
-appVersion: "0.0.6"
+version: 0.0.7
+appVersion: "0.0.7"
 dependencies:
   - name: api
-    version: "0.0.6"
+    version: "0.0.7"
     repository: file://charts/api
