@@ -78,15 +78,16 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          format: 'json'
-          output: 'trivy-report.json'
+          format: 'table'
           severity: 'CRITICAL,HIGH'
       
-      - name: Create summary
-        if: always()
-        run: |
-          echo "## Trivy Security Scan" >> $GITHUB_STEP_SUMMARY
-          jq -r '.Results[]? | select(.Vulnerabilities) | .Vulnerabilities[] | "- **\(.Severity)**: \(.VulnerabilityID) in \(.PkgName)@\(.InstalledVersion)"' trivy-report.json >> $GITHUB_STEP_SUMMARY || echo "No vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+      - name: Run Trivy for JSON report
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-report.json'
       
       - name: Upload Trivy report
         uses: actions/upload-artifact@v4
