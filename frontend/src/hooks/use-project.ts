@@ -97,7 +97,8 @@ export const useProjectStore = create<ProjectStore>()(
     {
       name: "project-storage",
       partialize: (state) => ({
-        currentProjectId: state.currentProject?.id || null,
+        projects: state.projects,
+        currentProject: state.currentProject,
       }),
       skipHydration: true,
     }

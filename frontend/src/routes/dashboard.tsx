@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   SidebarProvider,
@@ -10,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/hooks/use-auth";
 import { useOrganizationStore } from "@/hooks/use-organization";
 import { useProjectStore } from "@/hooks/use-project";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -37,10 +39,32 @@ export const Route = createFileRoute("/dashboard")({
       });
     }
   },
+  pendingComponent: AuthLoading,
   component: ControlLayout,
 });
 
+function AuthLoading() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 function ControlLayout() {
+  const navigate = useNavigate();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      navigate({ to: "/auth" });
+    }
+  }, [isInitialized, isAuthenticated, navigate]);
+
+  if (!isInitialized || !isAuthenticated) {
+    return <AuthLoading />;
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
