@@ -9,27 +9,19 @@ import { useMemo } from "react";
 import { useThemeStore } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/dashboard/metrics")({
-  loader: ({ context }) => {
+  loader: async ({ context }) => {
     const org = context.getOrganization();
-    if (!org?.id)
+    if (!org?.id) {
       return { llmSubinstances: [], projects: [], documentCount: 0 };
+    }
 
-    const documentCountPromise = getDocumentCount(
-      "document-intelligence",
-      org.id
-    );
+    const [llmSubinstances, projects, documentCount] = await Promise.all([
+      listLLMSubinstances({ organization_id: org.id }).catch(() => []),
+      projectService.fetchProjectsByOrganization(org.id).catch(() => []),
+      getDocumentCount("document-intelligence", org.id).catch(() => 0),
+    ]);
 
-    return Promise.all([
-      listLLMSubinstances({ organization_id: org.id }),
-      projectService.fetchProjectsByOrganization(org.id),
-      documentCountPromise,
-    ])
-      .then(([llmSubinstances, projects, documentCount]) => ({
-        llmSubinstances,
-        projects,
-        documentCount,
-      }))
-      .catch(() => ({ llmSubinstances: [], projects: [], documentCount: 0 }));
+    return { llmSubinstances, projects, documentCount };
   },
   component: DashboardPage,
 });

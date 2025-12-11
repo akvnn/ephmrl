@@ -31,7 +31,7 @@ export default function Header() {
                 </a>
               ))}
               <a
-                href="/dashboard/deployed"
+                href={isAuthenticated ? "/dashboard/deployed" : "/auth"}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-inter font-medium"
               >
                 {isAuthenticated ? "Dashboard" : "Sign In"}
@@ -65,7 +65,7 @@ export default function Header() {
                   </a>
                 ))}
                 <a
-                  href="/dashboard/deployed"
+                  href={isAuthenticated ? "/dashboard/deployed" : "/auth"}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-inter font-medium text-center mt-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

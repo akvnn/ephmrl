@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "@tanstack/react-router";
 import { Check, ChevronsUpDown, Plus, Folder } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ import { organizationService } from "@/lib/organization";
 import { projectService } from "@/lib/project";
 
 export function ContextSwitcher() {
+  const router = useRouter();
   const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false);
   const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] =
     useState(false);
@@ -46,10 +48,22 @@ export function ContextSwitcher() {
     (state) => state.setCurrentOrganization
   );
 
+  const handleOrganizationChange = (org: typeof currentOrganization) => {
+    if (org?.id === currentOrganization?.id) return;
+    setCurrentOrganization(org);
+    router.invalidate();
+  };
+
   const projects = useProjectStore((state) => state.projects);
   const currentProject = useProjectStore((state) => state.currentProject);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const projectsLoading = useProjectStore((state) => state.isLoading);
+
+  const handleProjectChange = (project: typeof currentProject) => {
+    if (project?.id === currentProject?.id) return;
+    setCurrentProject(project);
+    router.invalidate();
+  };
 
   const selectedOrg = currentOrganization;
   const selectedProject = currentProject;
@@ -93,7 +107,7 @@ export function ContextSwitcher() {
       const orgs = useOrganizationStore.getState().organizations;
       const createdOrg = orgs.find((org) => org.id === newOrg.id);
       if (createdOrg) {
-        setCurrentOrganization(createdOrg);
+        handleOrganizationChange(createdOrg);
       }
     } catch (error) {
       console.error("Organization creation failed:", error);
@@ -122,7 +136,7 @@ export function ContextSwitcher() {
       const projs = useProjectStore.getState().projects;
       const createdProject = projs.find((p) => p.id === newProject.id);
       if (createdProject) {
-        setCurrentProject(createdProject);
+        handleProjectChange(createdProject);
       }
     } catch (error) {
       console.error("Project creation failed:", error);
@@ -192,7 +206,7 @@ export function ContextSwitcher() {
               {organizations.map((org) => (
                 <DropdownMenuItem
                   key={org.id}
-                  onSelect={() => setCurrentOrganization(org)}
+                  onSelect={() => handleOrganizationChange(org)}
                   className="gap-2"
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
@@ -265,9 +279,7 @@ export function ContextSwitcher() {
               {projects.map((project) => (
                 <DropdownMenuItem
                   key={project.id}
-                  onSelect={() => {
-                    setCurrentProject(project);
-                  }}
+                  onSelect={() => handleProjectChange(project)}
                   className="gap-2"
                 >
                   <Folder className="size-4" />
