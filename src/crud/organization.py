@@ -19,15 +19,50 @@ from src.schemas.role import RoleInfo
 from src.schemas.user import UserMemberResponse
 
 
-async def validate_user_permission_global(
-    db: AsyncSession, user_id: uuid.UUID, permission: str
-) -> bool:
-    # TODO: implement this function to validate user global permission tied to subscription
-    return True
-
-
 class OrganizationCRUD:
     """CRUD operations for Organization model"""
+
+    @staticmethod
+    async def can_user_create_org(db: AsyncSession, user_id: uuid.UUID) -> bool:
+        """
+        Check if a user can create a new organization based on their owned organizations and plans.
+        Args:
+            db: Database session
+            user_id: User UUID
+        Returns:
+            True if user can create a new organization, False otherwise
+        """
+        stmt = (
+            select(Organization)
+            .options(selectinload(Organization.plan))
+            .join(org_members, Organization.id == org_members.c.org_id)
+            .join(user_roles, org_members.c.user_id == user_roles.c.user_id)
+            .join(Role, user_roles.c.role_id == Role.id)
+            .where(
+                org_members.c.user_id == user_id,
+                Role.name == "owner",
+            )
+        )
+
+        result = await db.execute(stmt)
+        orgs = result.scalars().all()
+
+        owned_count = len(orgs)
+
+        for org in orgs:
+            if (
+                org.plan
+                and org.subscription_status == "active"
+                and org.plan.features
+                and org.plan.features.get("allow_org_creation", False)
+            ):
+                max_orgs = (
+                    org.plan.features.get("max_orgs", None)
+                    if org.plan.features
+                    else None
+                )
+                if max_orgs is None or owned_count < max_orgs:
+                    return True
 
     @staticmethod
     async def validate_user_permission_for_org(
