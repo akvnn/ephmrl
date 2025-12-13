@@ -195,17 +195,17 @@ export default function AI_Prompt({
           <div className="h-px bg-border/50" />
 
           {/* Control Bar */}
-          <div className="flex flex-col gap-3 px-5 py-3 bg-muted/40 rounded-b-2xl">
+          <div className="flex flex-col gap-3 px-3 sm:px-5 py-3 bg-muted/40 rounded-b-2xl">
             {/* Controls Row */}
-            <div className="flex h-10 items-center justify-between">
+            <div className="flex h-10 items-center justify-between gap-2">
               {/* Left Controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                 {/* Model Selector */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       className={cn(
-                        "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+                        "flex h-9 items-center gap-1.5 sm:gap-2 rounded-lg px-2 sm:px-3 text-sm font-medium",
                         "bg-background hover:bg-muted/60 border border-border/60",
                         "transition-all duration-150 hover:border-border/80",
                         "focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -217,19 +217,19 @@ export default function AI_Prompt({
                       <AnimatePresence mode="wait">
                         <motion.div
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1.5 sm:gap-2"
                           exit={{ opacity: 0, y: 5 }}
                           initial={{ opacity: 0, y: -5 }}
                           key={selectedModelId || "empty"}
                           transition={{ duration: 0.15 }}
                         >
-                          <Bot className="h-4 w-4 text-muted-foreground/60" />
-                          <span className="max-w-[100px] truncate text-foreground text-xs">
+                          <Bot className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                          <span className="hidden sm:inline max-w-[100px] truncate text-foreground text-xs">
                             {isLoadingModels
                               ? "Loading..."
                               : selectedModel?.name || "Select model"}
                           </span>
-                          <ChevronDown className="h-3.5 w-3.5 opacity-40" />
+                          <ChevronDown className="h-3.5 w-3.5 opacity-40 shrink-0" />
                         </motion.div>
                       </AnimatePresence>
                     </Button>
@@ -271,7 +271,7 @@ export default function AI_Prompt({
                 </DropdownMenu>
 
                 {/* Divider */}
-                <div className="h-4 w-px bg-border/40" />
+                <div className="hidden sm:block h-4 w-px bg-border/40" />
 
                 {/* Search Button */}
                 <SearchButton
@@ -285,7 +285,7 @@ export default function AI_Prompt({
                 />
 
                 {/* Divider */}
-                <div className="h-4 w-px bg-border/40" />
+                <div className="hidden sm:block h-4 w-px bg-border/40" />
 
                 {/* Plugin Settings Icon */}
                 <div className="relative" ref={pluginPanelRef}>
@@ -301,7 +301,7 @@ export default function AI_Prompt({
                         : undefined
                     }
                     className={cn(
-                      "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+                      "flex h-9 items-center gap-2 rounded-lg px-2 sm:px-3 text-sm font-medium",
                       "bg-background hover:bg-muted/60 border border-border/60",
                       "transition-all duration-150 hover:border-border/80",
                       "focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -422,11 +422,11 @@ export default function AI_Prompt({
                 </div>
               </div>
 
-              <div>
+              <div className="shrink-0">
                 {/* Connection Status */}
                 <div
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold",
+                    "flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1 rounded-md text-xs font-semibold",
                     isConnected
                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                       : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
@@ -434,11 +434,13 @@ export default function AI_Prompt({
                 >
                   <span
                     className={cn(
-                      "h-1.5 w-1.5 rounded-full animate-pulse",
+                      "h-2 w-2 sm:h-1.5 sm:w-1.5 rounded-full animate-pulse",
                       isConnected ? "bg-emerald-500" : "bg-rose-500"
                     )}
                   />
-                  {isConnected ? "Ready" : "Offline"}
+                  <span className="hidden sm:inline">
+                    {isConnected ? "Ready" : "Offline"}
+                  </span>
                 </div>
               </div>
             </div>

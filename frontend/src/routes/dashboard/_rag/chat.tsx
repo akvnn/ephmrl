@@ -245,8 +245,8 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="border-b p-4">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-dvh overflow-hidden">
+      <div className="border-b p-4 shrink-0">
         <h1 className="text-2xl font-bold">AI Chat</h1>
         <p className="text-sm text-muted-foreground">
           Chat with AI using your connected models
@@ -256,9 +256,9 @@ function ChatPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 p-4 overflow-y-auto"
+        className="flex-1 p-4 overflow-y-auto min-h-0"
       >
-        <div className="space-y-4 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
           {messages.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -322,8 +322,8 @@ function ChatPage() {
         </div>
       </div>
 
-      <div className="border-t p-4">
-        <div className="max-w-3xl mx-auto">
+      <div className="border-t p-4 shrink-0">
+        <div className="max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
           <AI_Prompt
             value={input}
             onChange={setInput}
