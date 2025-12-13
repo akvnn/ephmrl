@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 
 import { FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,10 +40,16 @@ interface UploadedDocument {
 }
 
 function DocumentsPage() {
+  const router = useRouter();
   const { currentOrganization } = useOrganizationStore();
   const { currentProject } = useProjectStore();
   const { documents: initialDocuments } = Route.useLoaderData();
-  const [documents, setDocuments] = useState<UploadedDocument[]>(initialDocuments);
+  const [documents, setDocuments] =
+    useState<UploadedDocument[]>(initialDocuments);
+
+  useEffect(() => {
+    setDocuments(initialDocuments);
+  }, [initialDocuments]);
 
   const handleFileUpload = async (file: File) => {
     if (!currentOrganization || !currentProject) {
@@ -68,24 +74,10 @@ function DocumentsPage() {
 
       toast.success(`Document "${file.name}" uploaded successfully`);
 
-      await fetchDocuments();
+      router.invalidate();
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload document");
-    }
-  };
-
-  const fetchDocuments = async () => {
-    if (!currentOrganization || !currentProject) return;
-
-    try {
-      const response = await apiClient.get(
-        `/plugins/document-intelligence/recent_documents_info?organization_id=${currentOrganization.id}&project_id=${currentProject.id}`
-      );
-
-      setDocuments(response.data.items || []);
-    } catch (error) {
-      console.error("Failed to fetch documents:", error);
     }
   };
 
@@ -98,13 +90,12 @@ function DocumentsPage() {
       );
 
       toast.success("Document deleted");
-      await fetchDocuments();
+      router.invalidate();
     } catch (error) {
       console.error("Delete error:", error);
       toast.error("Failed to delete document");
     }
   };
-
 
   return (
     <div className="container mx-auto p-6 space-y-6">

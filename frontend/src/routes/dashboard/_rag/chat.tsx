@@ -41,7 +41,9 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(
+    preloadedModels.length > 0 ? preloadedModels[0].id : null
+  );
   const [models, setModels] = useState<AIModel[]>(preloadedModels);
   const [isLoadingModels, setIsLoadingModels] = useState(
     preloadedModels.length === 0
@@ -56,33 +58,22 @@ function ChatPage() {
   const currentMessageRef = useRef<string>("");
   const isNearBottomRef = useRef(true);
 
-  const fetchModelsAndConnect = useCallback(async () => {
-    if (!currentOrganization) return;
+  useEffect(() => {
+    setModels(preloadedModels);
+    setIsLoadingModels(false);
+    const firstModelId =
+      preloadedModels.length > 0 ? preloadedModels[0].id : null;
+    setSelectedModelId(firstModelId);
 
-    setIsLoadingModels(true);
-    try {
-      const response = await apiClient.get(
-        `/llm/models/my/all?organization_id=${currentOrganization.id}`
-      );
-
-      const fetchedModels = response.data;
-      setModels(fetchedModels);
-
-      if (fetchedModels.length > 0 && !isConnected) {
-        const modelToConnect = selectedModelId || fetchedModels[0].id;
-        setSelectedModelId(modelToConnect);
-        connectWebSocket(modelToConnect);
-      }
-    } catch (error) {
-      console.error("Failed to fetch models:", error);
-    } finally {
-      setIsLoadingModels(false);
+    if (firstModelId && currentOrganization) {
+      connectWebSocket(firstModelId);
     }
-  }, [currentOrganization, isConnected, selectedModelId]);
+  }, [preloadedModels]);
 
   useEffect(() => {
     setMessages([]);
-    fetchModelsAndConnect();
+    setSelectedPlugins([]);
+    setSelectedTools([]);
 
     if (currentOrganization?.id) {
       fetchAndSetInstalledPlugins(currentOrganization.id);
