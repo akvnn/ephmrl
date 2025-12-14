@@ -17,6 +17,7 @@ class ProjectCRUD:
         project_data: ProjectCreate,
         user_id: uuid.UUID,
         org_id: uuid.UUID,
+        commit: bool = True,
     ) -> Project:
         """Create a new project"""
         project = Project(
@@ -27,8 +28,9 @@ class ProjectCRUD:
             additional_metadata=project_data.additional_metadata or {},
         )
         db.add(project)
-        await db.commit()
-        await db.refresh(project)
+        if commit:
+            await db.commit()
+            await db.refresh(project)
         return project
 
     @staticmethod

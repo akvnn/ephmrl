@@ -89,6 +89,7 @@ async def create_org(
             slug=slug,
             creator_user_id=user.id,
             commit=True,
+            create_default_project=False,
         )
         return OrganizationResponse.model_validate(organization)
     except UnauthorizedException:
