@@ -74,6 +74,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     useThemeStore.getState().initializeTheme();
   }, []);
 
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>

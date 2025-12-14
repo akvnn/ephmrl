@@ -12,6 +12,7 @@ import { useAuthStore } from "@/hooks/use-auth";
 import { useOrganizationStore } from "@/hooks/use-organization";
 import { useProjectStore } from "@/hooks/use-project";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -60,6 +61,17 @@ function ControlLayout() {
       navigate({ to: "/auth" });
     }
   }, [isInitialized, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      useAuthStore.getState().clearAuth();
+      toast.error("Session expired. Please log in again.");
+      window.location.href = "/auth";
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
+  }, []);
 
   if (!isInitialized || !isAuthenticated) {
     return <AuthLoading />;

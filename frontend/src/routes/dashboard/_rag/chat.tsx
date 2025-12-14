@@ -41,7 +41,9 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(
+    preloadedModels.length > 0 ? preloadedModels[0].id : null
+  );
   const [models, setModels] = useState<AIModel[]>(preloadedModels);
   const [isLoadingModels, setIsLoadingModels] = useState(
     preloadedModels.length === 0
@@ -56,33 +58,22 @@ function ChatPage() {
   const currentMessageRef = useRef<string>("");
   const isNearBottomRef = useRef(true);
 
-  const fetchModelsAndConnect = useCallback(async () => {
-    if (!currentOrganization) return;
+  useEffect(() => {
+    setModels(preloadedModels);
+    setIsLoadingModels(false);
+    const firstModelId =
+      preloadedModels.length > 0 ? preloadedModels[0].id : null;
+    setSelectedModelId(firstModelId);
 
-    setIsLoadingModels(true);
-    try {
-      const response = await apiClient.get(
-        `/llm/models/my/all?organization_id=${currentOrganization.id}`
-      );
-
-      const fetchedModels = response.data;
-      setModels(fetchedModels);
-
-      if (fetchedModels.length > 0 && !isConnected) {
-        const modelToConnect = selectedModelId || fetchedModels[0].id;
-        setSelectedModelId(modelToConnect);
-        connectWebSocket(modelToConnect);
-      }
-    } catch (error) {
-      console.error("Failed to fetch models:", error);
-    } finally {
-      setIsLoadingModels(false);
+    if (firstModelId && currentOrganization) {
+      connectWebSocket(firstModelId);
     }
-  }, [currentOrganization, isConnected, selectedModelId]);
+  }, [preloadedModels]);
 
   useEffect(() => {
     setMessages([]);
-    fetchModelsAndConnect();
+    setSelectedPlugins([]);
+    setSelectedTools([]);
 
     if (currentOrganization?.id) {
       fetchAndSetInstalledPlugins(currentOrganization.id);
@@ -245,8 +236,8 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="border-b p-4">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-dvh overflow-hidden">
+      <div className="border-b p-4 shrink-0">
         <h1 className="text-2xl font-bold">AI Chat</h1>
         <p className="text-sm text-muted-foreground">
           Chat with AI using your connected models
@@ -256,9 +247,9 @@ function ChatPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 p-4 overflow-y-auto"
+        className="flex-1 p-4 overflow-y-auto min-h-0"
       >
-        <div className="space-y-4 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
           {messages.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -322,8 +313,8 @@ function ChatPage() {
         </div>
       </div>
 
-      <div className="border-t p-4">
-        <div className="max-w-3xl mx-auto">
+      <div className="border-t p-4 shrink-0">
+        <div className="max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
           <AI_Prompt
             value={input}
             onChange={setInput}

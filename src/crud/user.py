@@ -6,8 +6,10 @@ from sqlalchemy.orm import defer, load_only
 from src.constants import FREE_PLAN_ID, OWNER_ROLE_ID
 from src.crud.plugin import OrganizationPluginCRUD
 from src.configuration import config
+from src.crud.project import ProjectCRUD
 from src.models.organization import Organization, SubscriptionStatus
 from src.models.user import User
+from src.schemas.project import ProjectCreate
 from src.schemas.user import UserCreate, UserCreateFromAuth0
 from src.models.relationship import org_members, user_roles
 from sqlalchemy.orm import selectinload
@@ -101,6 +103,7 @@ async def create_organization(
     slug: str,
     creator_user_id: uuid.UUID,
     commit: bool = True,
+    create_default_project: bool = False,
 ) -> Organization:
     """
     Create a new organization and assign creator as owner.
@@ -110,6 +113,7 @@ async def create_organization(
         slug: Unique URL-friendly identifier
         creator_user_id: User who creates the org (becomes owner)
         commit: Whether to commit the transaction
+        create_default_project: Whether to create a default project for the organization
 
     Returns:
         Created Organization object
@@ -146,6 +150,13 @@ async def create_organization(
     except Exception as e:
         # catch errors and don't block org creation
         logger.error(f"Error installing default plugins for org {org.id}: {e}")
+    if create_default_project:
+        project_data = ProjectCreate(
+            name="Default Project",
+            description="This is your default project.",
+            additional_metadata={},
+        )
+        await ProjectCRUD.create(db, project_data, creator_user_id, org.id, commit)
     if commit:
         await db.commit()
         await db.refresh(org)
@@ -204,7 +215,12 @@ async def create_user_with_org_native(db: AsyncSession, user: UserCreate) -> Use
     org_slug = f"{slug_base}-{str(db_user.id)[:6]}"
 
     await create_organization(
-        db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False
+        db=db,
+        name=org_name,
+        slug=org_slug,
+        creator_user_id=db_user.id,
+        commit=False,
+        create_default_project=True,
     )
 
     # Commit everything together
@@ -342,7 +358,12 @@ async def create_or_update_user_from_auth0(
     org_slug = f"{slug_base}-{str(db_user.id)[:6]}"
 
     await create_organization(
-        db=db, name=org_name, slug=org_slug, creator_user_id=db_user.id, commit=False
+        db=db,
+        name=org_name,
+        slug=org_slug,
+        creator_user_id=db_user.id,
+        commit=False,
+        create_default_project=True,
     )
 
     # Commit everything together

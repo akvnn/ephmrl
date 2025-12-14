@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { listLLMSubinstances, deprovisionLLMSubinstance } from "@/lib/llm";
 import type { LLMSubinstance } from "@/types/llm";
@@ -20,17 +20,13 @@ export const Route = createFileRoute("/dashboard/_llm/deployed")({
 });
 
 function DeployedModelsPage() {
+  const router = useRouter();
   const { currentOrganization } = useOrganizationStore();
   const deployments = Route.useLoaderData();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeployment, setSelectedDeployment] =
     useState<LLMSubinstance | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const fetchDeployments = async () => {
-    if (!currentOrganization?.id) return;
-    return listLLMSubinstances({ organization_id: currentOrganization.id });
-  };
 
   const handleDeleteClick = (deployment: LLMSubinstance) => {
     setSelectedDeployment(deployment);
@@ -51,8 +47,7 @@ function DeployedModelsPage() {
       setDeleteDialogOpen(false);
       setSelectedDeployment(null);
 
-      // Refresh the list
-      await fetchDeployments();
+      router.invalidate();
     } catch (error: any) {
       const message =
         error.response?.data?.detail ||

@@ -15,6 +15,7 @@ interface AuthState {
   login: (data: LoginData) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
+  clearAuth: () => void;
   initializeUserContext: () => Promise<void>;
 }
 
@@ -83,6 +84,12 @@ export const useAuthStore = create<AuthState>()(
 
           toast.error("Logout failed, but you've been logged out locally.");
         }
+      },
+
+      clearAuth: () => {
+        set({ user: null, isAuthenticated: false });
+        useOrganizationStore.getState().clearOrganizations();
+        useProjectStore.getState().clearProjects();
       },
 
       initializeUserContext: async () => {

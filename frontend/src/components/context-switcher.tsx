@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { Check, ChevronsUpDown, Plus, Folder } from "lucide-react";
 import {
@@ -67,18 +67,6 @@ export function ContextSwitcher() {
 
   const selectedOrg = currentOrganization;
   const selectedProject = currentProject;
-
-  useEffect(() => {
-    if (
-      selectedOrg &&
-      !projectsLoading &&
-      projects.length === 0 &&
-      !isCreateProjectDialogOpen &&
-      !isCreateOrgDialogOpen
-    ) {
-      setIsCreateProjectDialogOpen(true);
-    }
-  }, [selectedOrg, projectsLoading, projects.length, isCreateProjectDialogOpen, isCreateOrgDialogOpen]);
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
     e.preventDefault();

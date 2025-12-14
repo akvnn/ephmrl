@@ -165,7 +165,7 @@ async def refresh_access_token(
     """
     try:
         if not refresh_token:
-            raise UnauthenticatedException("Refresh token missing")
+            raise UnauthenticatedException
 
         # Decode and verify refresh token
         payload = auth.verify_refresh_token_string(refresh_token)
