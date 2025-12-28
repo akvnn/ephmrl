@@ -89,6 +89,9 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
 
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        
       - name: Update Helm Chart values
         run: |
           VERSION="${{ needs.build-and-push.outputs.version }}"
@@ -112,6 +115,7 @@ jobs:
           sed -i "s|^version:.*|version: ${CHART_VERSION}|g" ${CHART_PATH}/Chart.yaml
           sed -i "s|^appVersion:.*|appVersion: \"${VERSION}\"|g" ${CHART_PATH}/Chart.yaml
 
+          helm dependency update ${CHART_PATH}
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
