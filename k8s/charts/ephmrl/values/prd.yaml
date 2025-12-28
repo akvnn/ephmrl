@@ -1,0 +1,95 @@
+
+imagePullSecrets:
+  - name: dockerhub-secret
+imagePullSecretsCreate: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: ephmrl.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+livenessProbe: null
+readinessProbe: null
+
+autoscaling:
+  enabled: false
+
+configMapEnv:
+  API_URL: https://ephmrl.ai/api
+  AUTH0_DOMAIN: ephemeral-ai.us.auth0.com
+  AUTH0_CLIENT_ID: Vufg23l0f9e2fDMVMj1zRIbRipJIPFde
+
+secretEnv:
+  SOME_ENV_SECRET: "c29tZV92YWx1ZQ=="
+
+api:
+  imagePullSecrets:
+    - name: dockerhub-secret
+  livenessProbe: null
+  readinessProbe: null
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    hosts:
+      - host: ephmrl.ai
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+    tls: []
+  resources:
+    limits:
+      cpu: 200m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 2Gi
+  autoscaling:
+    enabled: false
+  configMapEnv:
+    ENVIRONMENT: production
+    API_PORT: "8000"
+    AUTH0_DOMAIN: ephemeral-ai.us.auth0.com
+    AUTH0_API_AUDIENCE: https://api.ephemeral.com
+    AUTH0_ISSUER: https://ephemeral-ai.us.auth0.com/
+    AUTH0_CLIENT_ID: Vufg23l0f9e2fDMVMj1zRIbRipJIPFde
+    AUTH0_ALGORITHMS: '["RS256"]' 
+    FRONTEND_URL: https://ephmrl.ai
+    CORS_ORIGINS: '["https://ephmrl.ai"]'
+    PLUGIN_BASE_URL: http://ephmrl-ai-plugin.ephmrl-ai-plugin.svc.cluster.local
+    JWT_PUBLIC_KEY: | 
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsujPUFiywQjHFlr18tkO
+        aS41AFr9WOzQuWsuEyWP7YeEtdkBjijuDQYowHuJjmevVTu+ZqWD5AuVdNGqN4e3
+        XzyeNHIJoCMjqfqkToFqVvCn0oSv44wEM/kE0Fg+zWuvN2b7givAZ35Fgtxf6Qb3
+        lODjkpf5BKROwtHN+d6LZWBq/rwzLRfdWo3c2LAEzQak44w0jC+w0ZRGtUKW7Z+2
+        gpUYCtkadRukk/zrIWJvwI+xE/LlLXepBuVgAQo4xbiMGTsyyJXZ0srwTGt3HaRp
+        +UvdDHjoR4rGKObMTqZkDs3fadcQb2enBoBjjkYxCzQ3HUzdXgnqEFCArVpXVazt
+        awIDAQAB
+        -----END PUBLIC KEY-----
+  secretEnv: null # will not be tracked

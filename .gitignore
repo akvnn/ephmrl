@@ -24,6 +24,4 @@ venv/
 
 # Charts
 k8s/charts/*/charts/*.tgz
-k8s/charts/*/values/*.yaml
-k8s/charts/*/values/*.yml
 k8s/charts/*/Chart.lock
